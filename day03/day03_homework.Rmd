@@ -1,0 +1,93 @@
+---
+title: "Day 3 Homework"
+output: html_document
+---
+
+1. Identify a column in your data that *should* be a factor (whether it is or not). Check to see whether R is already treating it as a factor, and if not, convert it into a factor.
+
+```{r}
+library(readxl)
+terrorism <- read_excel("~/Desktop/R Homework/R_Homework_Jason_Hasbrouck/terrorism.xlsx")
+
+my.terrorism <- terrorism
+
+str(my.terrorism$attacktype1)
+
+my.terrorism$attacktype1 <- as.factor(my.terrorism$attacktype1)
+str(my.terrorism$attacktype1)
+
+```
+
+2. What are the levels of the factor? How many occurrences of each level are there in the data?
+   
+```{r}
+levels(my.terrorism$attacktype1)
+# 9 levels
+```
+
+3. Create a new column that is a numeric "version" of the factor column, using `as.numeric()`. Use `xtabs()` to see how the values of these columns line up.
+
+```{r}
+my.terrorism$attacktype2 <- as.numeric(my.terrorism$attacktype1)
+str(my.terrorism$attacktype2)
+
+xtabs(~ attacktype1 + attacktype2, my.terrorism)
+
+```
+
+4. Create another column that is a copy of the factor column. Now, recode this new column so that the factor levels have new names. 
+  (e.g., if you have a factor with levels "A" and "B", you could make a new column that had "condition A" and "condition B" as the level names instead)
+1 = ASSASSINATION
+2 = ARMED ASSAULT
+3 = BOMBING/EXPLOSION
+4 = HIJACKING
+5 = HOSTAGE TAKING (BARRICADE INCIDENT)
+6 = HOSTAGE TAKING (KIDNAPPING)
+7 = FACILITY / INFRASTRUCTURE ATTACK
+8 = UNARMED ASSAULT
+9 = UNKNOWN
+
+
+```{r}
+my.terrorism$attacktype1b <- my.terrorism$attacktype1
+
+levels(my.terrorism$attacktype1b) <- c("assassination", "armed.assault", "bombing.explosion", "hijacking", "hostage.barricade", "hostage.kidnapping", "facility.attack", "unarmed.assault", "unknown" )
+
+levels(my.terrorism$attacktype1b)
+
+```
+
+5. Change the order of the levels in your new factor, using three different methods:
+  a. `relevel()`
+  b. `reorder()`
+  c. `factor()`
+
+```{r}
+my.terrorism$attacktype1b <- relevel(my.terrorism$attacktype1b, "bombing.explosion")
+levels(my.terrorism$attacktype1b)
+
+xtabs(~ attacktype1b + attacktype1, my.terrorism)
+
+my.terrorism$attacktype1.reorder <- reorder(my.terrorism$attacktype1, X=as.numeric(my.terrorism$attacktype1), FUN=length)
+summary(my.terrorism$attacktype1.reorder)
+
+
+my.terrorism$attacktype1b.reorder <- factor(my.terrorism$attacktype1b, levels = c("hostage.barricade", "unarmed.assault", "assassination",  "bombing.explosion", "hijacking",  "hostage.kidnapping", "facility.attack", "armed.assault",  "unknown"))
+
+levels(my.terrorism$attacktype1b.reorder)
+
+```
+
+6. Missing values
+  a. Do you have any missing values (NA) in your data?
+  b. Are there any places where you *should* have missing values but they were read into R as some other value?
+  c. If the answer to (b) is "yes", figure out how to read in your data in a way that correctly identifies the missing value "code"
+  d. If you have any NAs in your data, describe why you think those values are missing. Does there appear to be any systematic relationship between missingness and other variables in your data?
+
+```{r}
+is.na(my.terrorism)
+
+#There are not any missing values (NA) in my dataset. There doesnt appear to be places where there should be missing data.
+
+```
+

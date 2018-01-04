@@ -1,0 +1,53 @@
+---
+title: "Day 3 Practice"
+output: html_document
+---
+
+1. Make a "copy" of the `iris` data set in your workspace. Use `summary()` on it, identify a factor column.
+
+```{r}
+
+```
+
+2. Create different versions of the factor column, in the new data set:
+   a. a numeric vector with `as.numeric()`
+   b. a character vector
+   
+```{r}
+
+```
+
+3. Use `xtabs()` to see how the values in these new columns line up with the original factor column.
+
+```{r}
+
+```
+
+4. Create another column that is a copy of the factor column. Now, recode this new column so that the factor levels have new names. 
+
+```{r}
+
+```
+
+5. Check the order of levels of Species with `levels()`. Create a new column from this factor, changing the order of the levels, using:
+  a. `relevel()`
+  b. `reorder()`
+  c. `factor()`
+
+```{r}
+
+```
+
+6. Working with missing values
+   - read in the data from "scottdata/CognitionPaperModifiedData.csv"
+   - locate NAs
+   - display the rows of the data frame where the WithinMinPairs variable has missing values
+   - create a new column that's a copy of the WithinMinPairs column
+   - replace all missing values in this column with zeros
+   - try using `xtabs()` to check this change in coding (why doesn't this work?)
+   - try another method for double-checking your coding
+
+```{r}
+
+```
+

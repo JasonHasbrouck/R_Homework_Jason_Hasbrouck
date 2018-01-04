@@ -1,0 +1,330 @@
+---
+title: "Day 3 Lecture"
+output: html_document
+---
+
+# Review
+
+# R Markdown vs. scripts
+Sweave: the original "reproducible document", mix of LaTeX and R
+
+R Markdown: one of the "cutting edge" formats, especially well-integrated into RStudio, that allows mixing of R code with text, document formatting, links, graphics, etc.
+
+The following is a code chunk, and when `knitr()` is run on this document, it will display both the code and the output.
+
+```{r}
+x <- rnorm(10000)
+hist(x)  # this is a histogram
+
+t.test(x)
+```
+
+
+
+You can also insert "inline" results, like the following:
+
+The mean of `x` is `r mean(x)`.
+
+More documentation on Markdown and R Markdown:
+  Help > Markdown Quick Reference
+  Help > RStudio Docs
+
+# Reading and writing data/files
+## Weird file types
+Package for reading Excel data:
+  `readxl`
+
+Package for other stats packages (SPSS, SAS, Stata):
+  `haven`
+
+"Tidyverse" package for reading various kinds of data:
+  `readr`
+
+## "Reading" .RData
+`save()` saves objects into a file
+`load()` puts objects in your workspace from an `.RData` file
+
+## Look at the options!
+```{r eval=FALSE}
+?read.table
+
+mydata <- read.csv(filename, na.strings = c("NA", "N/A", "n/a", " ", "nuthin"))
+
+?readLines
+?scan
+```
+
+## Writing files
+
+```{r eval=FALSE}
+?write.table # .csv, etc.
+```
+
+Catches
+  - rownames!
+```{r eval=FALSE}
+write.table(mydata, file = "outputfile.txt", 
+            sep = "\t",   # this makes the output tab-delimited
+            row.names = FALSE)  # good for exporting data
+
+write.csv(mydata, file = "outputfile.csv", row.names = FALSE) # good for writing CSVs
+```
+
+# Data types
+   - numeric
+   - logical
+   - character
+   - factor
+   - NA
+   - NULL
+   - others (e.g, "Date")
+
+## Numeric
+  - numbers!
+  - sometimes integers can differ from non-integers
+  - `as.numeric()` forces it to be a number (not integers)
+  - `1L` is an integer
+  - have mean, medians
+
+## Logicals
+  - TRUE and FALSE
+  - if coerced to `as.numeric`, TRUE == 1, FALSE == 0
+    - can take the mean of a logical vector
+  - Shortcuts: T and F
+    - *DANGER*: T and F can be overwritten
+  - logical operators create logical vectors
+    - `==`
+    - `>`
+    - `<`
+    - `|`  This is the "long bar", meaning (inclusive) "or" (aka "pipe")
+    - `&`  == "and"
+    - `>=`  greater or equal
+    - `!`  is NOT
+    - `&&` and `||`  for more specific programming situations
+    
+```{r}
+3 < 4
+
+sleep
+sleep$extra < 0 | sleep$extra > 4
+
+(sleep$extra < 0) & (sleep$extra > 4)
+
+!sleep$extra < 0
+
+c(1, 2, 3, 4) < c(0, 3, 1, 5)
+
+which(sleep$extra > 0)
+sleep$extra[sleep$extra > 0]
+
+iris[iris$Species == "setosa" | iris$Sepal.Length > 5, ]
+
+wrong.way <- iris[iris$Species == c("setosa", "virginica"), ] # does not work like you want it to
+nrow(wrong.way)
+
+right.way <- iris[iris$Species %in% c("setosa", "virginica"), ]
+nrow(right.way)
+
+not.in <- iris[!iris$Species %in% c("setosa", "virginica"), ]
+iris[iris$Species != "setosa", ]
+iris[!iris$Species == "setosa", ]
+
+```
+
+## Characters
+  - `as.character()` converts to characters
+  - more primitive than factors
+  - can manipulate with regular expressions, other text functions
+  
+## Factors
+  - Actually numbers under the hood
+  - Act like numbers + labels
+  - VERY useful for many kinds of analyses
+  - if a column is a *property* of data (not a measure itself), factors are usually best
+    - groupings = good as factors
+    - conditions = good as factors
+  - if a column is *data*, maybe consider keeping it a string
+    - free response answers = bad as factors
+  - `as.factor()` coerces to a factor
+  - `factor()` creates a factor
+  - factors have *levels*: categories
+  - `stringsAsFactors` : option for how to read in character vectors
+    - = FALSE if you don't want to read in characters as factors
+
+```{r}
+scott <- read.csv("../scottdata/CognitionPaperFinalData.csv")
+summary(scott$Merged)
+summary(as.character(scott$Merged))
+levels(scott$Merged)
+levels(scott$Merged) <- c("Unmerged", "Merged") # only changing the labels
+levels(scott$Merged)
+levels(scott$Merged) <- c("Merged", "Unmerged") # only changing the labels
+scott$Merged <- factor(scott$Merged, levels = c("Unmerged", "Merged"))
+
+# relevel()
+# takes the level specified and moves it to the front
+scott$Merged <- relevel(scott$Merged, "Merged")
+summary(scott$Merged)
+summary(scott$Corpus)
+scott$Corpus <- relevel(scott$Corpus, "RP")
+summary(scott$Corpus)
+
+# reorder()
+
+
+```
+
+## Data manipulation excursion
+### Creating (simple) new columns
+
+```{r}
+mysleep <- sleep
+mysleep
+mysleep$Study <- "Study1"
+mysleep$noise <- rnorm(20)
+mysleep
+mysleep$Gender <- c("Male", "Female") # recycling
+mysleep
+mysleep$Gender <- rep(c(rep("Male", 5), rep("Female", 5)), 2)
+mysleep
+
+mysleep$direction[mysleep$extra >= 0] <- "positive"
+mysleep$direction[mysleep$extra < 0] <- "negative"
+mysleep$direction <- factor(mysleep$direction, levels = c("positive", "negative"))
+summary(mysleep)
+```
+
+### Using xtabs() to check coding/cross-tabs
+
+```{r}
+xtabs(~ extra + direction, mysleep)
+```
+
+### Working with factors
+
+```{r}
+summary(scott)
+summary(scott$Corpus)
+scott$Corpus.full <- scott$Corpus
+levels(scott$Corpus.full) <- c("American English", "Dutch", "French", "German", "Cantonese", "Korean", "British English", "Slovakian", "Spanish")
+summary(scott$Corpus.full)
+
+xtabs(~ Corpus + Corpus.full, scott)
+
+summary(relevel(scott$Corpus.full, "British English"))
+
+summary(scott$Merged)
+summary(relevel(scott$Merged, "Unmerged"))
+scott$MergedOrder[scott$Merged == "Unmerged"] <- 1
+scott$MergedOrder[scott$Merged == "Merged"] <- 2
+
+xtabs(~ Merged + MergedOrder, scott)
+
+summary(scott$Merged)
+summary(reorder(scott$Merged, scott$MergedOrder))
+summary(scott$Merged)
+
+summary(factor(scott$Merged, levels = c("Unmerged", "Merged")))
+```
+
+## NA and NULL (and others)
+  - `NA` mean "missing value" or "missing data"
+  - `NULL` means "nothing", the absence of something
+  - `Inf` and `-Inf`
+  - `NaN`
+
+Handling NAs
+  - can be a a huge pain
+  - sometimes `na.rm = TRUE` (like for `mean()`)
+```{r}
+x <- c(1, 2, NA, 4, 68)
+mean(x)
+mean(x, na.rm = TRUE)
+
+x == NA
+is.na(x)
+!is.na(x)
+
+```
+  - sometimes it's other stuff
+  - `cor()` use = "pairwise.complete.obs"
+  - no universal "deal with NAs" argument
+
+# More subsetting
+
+## Basics
+```{r}
+sleep
+sleep[sleep$group == 1, ]
+sleep$group == 1
+sleep[which(sleep$group == 1), ]
+which(sleep$group == 1)
+sleep[sleep$group == 1 & sleep$extra > 0, ]
+sleep[sleep$group == 1 | sleep$extra > 0, ]
+# "where"
+sleep[!sleep$group == 1, ]
+
+sleep[sleep$ID == c(1, 3, 4, 6), ]  # DOESN'T WORK
+sleep[sleep$ID %in% c(1, 3, 4, 6), ]
+sleep$ID %in% c(1, 3, 4, 6)
+sleep[!sleep$ID %in% c(1, 3, 4, 6), ]  # "not in"
+
+# ?subset  # check Warning
+# dplyr is better (IMHO)
+# we will get to dplyr package tomorrow
+
+```
+
+# Combining data sets
+
+## Combining data frame objects
+### `rbind()` and `cbind()`
+  - rbind
+    - glues rows on top of each other
+    - expects same columns
+    - new and improved `bind_rows()` in `dplyr` package
+  - cbind
+    - glues columns next to each other
+    - need to be the same length    
+```{r}
+sleep1 <- sleep[sleep$group == 1,  ]
+sleep2 <- sleep[sleep$group == 2,  ]
+sleep1
+sleep2
+sleep.reassembled <- rbind(sleep1, sleep2) # or bind_rows(sleep1, sleep2)
+sleep.reassembled
+
+sleep.left <- sleep[, 1:2]
+sleep.left
+sleep.ID <- sleep[, 3]
+sleep.ID
+sleep.reassembled.2 <- cbind(sleep.left, sleep.ID)
+sleep.reassembled.2
+```
+
+### `merge()`
+```{r}
+subject.info <- data.frame(ID = 3:12, gender = c("male", "male", "female", "female", "female", "female", "male", "female", "male", "male"))
+summary(subject.info)
+
+sleep.merged <- merge(sleep, subject.info)
+sleep
+sleep.merged
+nrow(sleep)
+nrow(sleep.merged)
+
+mysleep <- sleep
+mysleep$ID <- as.numeric(mysleep$ID)
+
+sleep.merged2 <- merge(mysleep, subject.info, all = TRUE)
+sleep.merged2
+
+```
+    - simplest: have ONE column in common, named the same thing (with the same values)
+    - can get MUCH more complex
+    - `nrow()` good check on what was gained/lost during a merge
+    - "join" functions in `dplyr`
+      - `inner_join()` is like all = FALSE
+      - `full_join()` is like all = TRUE
+      - `left_join()`, `right_join()`, etc.
+      - see ?join for more details
