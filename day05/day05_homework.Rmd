@@ -6,12 +6,44 @@ output: html_document
 0. Reload your data, and re-use the code you already have for getting things formatted nicely (columns renamed, factors relabeled, etc.)
 
 ```{r}
+library(dplyr)
+library(tidyr)
+library(readxl)
+terrorism <- read_excel("~/Desktop/R Homework/R_Homework_Jason_Hasbrouck/terrorism.xlsx")
 
+my.terrorism <- terrorism
+
+
+my.terrorism$iyear <- as.factor(my.terrorism$iyear)
+
+my.terrorism$imonth <- as.factor(my.terrorism$imonth)
+
+my.terrorism$attacktype1 <- as.factor(my.terrorism$attacktype1)
+
+my.terrorism$attacktype1_txt <- as.factor(my.terrorism$attacktype1_txt)
+
+str(my.terrorism)
+
+my.terrorism$attacktype1b <- my.terrorism$attacktype1
+
+levels(my.terrorism$attacktype1b) <- c("assassination", "armed.assault", "bombing.explosion", "hijacking", "hostage.barricade", "hostage.kidnapping", "facility.attack", "unarmed.assault", "unknown" )
+
+levels(my.terrorism$attacktype1b)
+
+my.terrorism$attacktype1b <- as.factor(my.terrorism$attacktype1b)
+
+str(my.terrorism)
 ```
 
 1. Aggregate (e.g., get mean/median/max/something) of some numerical variable, over one or more factors.  Use `group_by()` plus `summarize()` from the `dplyr` package. You may or may not need to reshape the data first!
 
 ```{r}
+my.terrorism$attack.ID <- 1:nrow(my.terrorism)
+
+my.terrorism$casualty <- my.terrorism$nkill + my.terrorism$nwound
+
+attack.means <- summarize(group_by(my.terrorism, attacktype1b, iyear), mean = mean(casualty, na.rm = TRUE))
+attack.means
 
 ```
 
@@ -22,12 +54,14 @@ output: html_document
   
 ```{r}
 
+
+
 ```
 
 3. Get your data into "long" (aka "tidy") format, if it isn't already
 
 ```{r}
-
+#Data is currently in long format
 ```
 
 

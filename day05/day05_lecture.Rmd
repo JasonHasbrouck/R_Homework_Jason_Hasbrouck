@@ -24,6 +24,7 @@ output: html_document
 
 # Data transformations    
 ## Creating new columns
+- this data set has 20 rows, so the columns we are creating with just Study1, Study2, 10, and 8 is an example of how R will recycle the data to fill all rows
 
 ```{r}
 mysleep <- sleep
@@ -55,6 +56,7 @@ mysleep
 mysleep$five <- c(1, 2, 3, 4) # does work (recycling)
 mysleep
 
+#Examples of Repitition
 rep(2, times = 10)
 rep(2:4, 10)
 rep(2:4, each = 10)
@@ -85,10 +87,18 @@ mysleep
 levels(mysleep$group) <- c("pre", "post")
 
 # spread(yourdata, factor.to.spread.by, column.with.values)
+mysleep.wide <- spread(mysleep, group, extra)
+mysleep.wide
+
 
 # QUICK PRACTICE: compute gains
+mysleep.wide$gains <- mysleep.wide$post - mysleep.wide$pre
+mysleep.wide
 
 # gather(yourdata, new.factor.column.name, measure.column.name, columns.to.gather)
+mysleep.long <- gather(mysleep.wide, "treatment", "time", c("pre", "post")) 
+#or can use pre:post which will take all columns between pre and post
+                       
 
 ```
 
@@ -101,10 +111,17 @@ levels(mysleep$group) <- c("pre", "post")
 
 ```{r}
 colnames(who)
-who.long <- gather(who, stuff, counts, new_sp_m014:newrel_f65)
+head(who)
 
+who.long <- gather(who, stuff, counts, new_sp_m014:newrel_f65)
+head(who.long)
+
+#split stuff column apart
+#gsub can be used as a find and replace function - changing newrel into new_rel
 who.long$stuff <- gsub("newrel", "new_rel", who.long$stuff)
 
+
+#seperate function (dataframe, column name to seperate w/argument, vector of new column names)
 who.long <- separate(who.long, stuff, sep = "_", c("newold", "type", "gender.age"))
 summary(who.long)
 head(who.long)
@@ -162,6 +179,7 @@ myff.long <- gather(myff, flavor, rating, potato:painty)
 head(myff.long)
 
 # get "cell means"
+#summarize, group by(data set, column 1, column 2), mean = ...)
 ff.means <- summarize(group_by(myff.long, treatment, flavor), mean = mean(rating))
 ff.means
 ff.means <- summarize(group_by(myff.long, treatment, flavor), mean = mean(rating, na.rm = TRUE))
@@ -179,6 +197,7 @@ ff.summaries
   - `%>%` operator
   - effect: pass the results of the thing on the left to the first argument of the thing on the right
   - very commonly used in `dplyr`
+  - 
 
 ```{r}
 x <- 1:10

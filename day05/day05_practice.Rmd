@@ -13,6 +13,33 @@ output: html_document
 
 ```{r}
 
+library(dplyr)
+iris.practice <- iris
+
+iris.color <- data.frame(Species = c("setosa", "versicolor", "virginica"), color = c("red", "purple", "pink"))
+
+
+iris.merge <- merge(iris.practice, iris.color)
+
+
+iris.color.extra <- data.frame(Species = c("setosa", "versicolor", "virginica", "extra"), color = c("red", "purple", "pink", "orange"))
+
+iris.color.nosetosa <- data.frame(Species = c("versicolor", "virginica"), color = c("purple", "pink"))
+
+iris.merge.extra <- merge(iris.practice, iris.color.extra, all = FALSE)
+iris.merge.extra2 <- merge(iris.practice, iris.color.extra, all = TRUE)
+iris.merge.extra3 <- left_join(iris.practice, iris.color.extra)
+iris.merge.extra3$Species <- as.factor(iris.merge.extra3$Species)
+
+nrow(iris.practice)
+nrow(iris.merge.extra)
+nrow(iris.merge.extra2)
+nrow(iris.merge.extra3)
+
+#if you gain or lose a lot of rows, use xtabs to see what happened
+
+iris.merge.nosetosa <- merge(iris.color, iris.color.nosetosa)
+
 ```
 
 2. Make (yet another) copy of the iris data set
@@ -21,6 +48,30 @@ output: html_document
   - Create a "median split" column on Sepal.Width. In other words, calculate the median of Sepal.Width, and then create a column that indicates whether the value in that row is less than the median or not
   
 ```{r}
+iris.practice <- iris
+iris.practice$Sepal.Width.log <- log(iris.practice$Sepal.Width)
+head(iris.practice)
+
+iris.practice$length.by.width <- iris.practice$Sepal.Length * iris.practice$Sepal.Width
+head(iris.practice)
+
+median(iris.practice$Sepal.Width)
+
+iris.practice$median.split <- iris.practice$Sepal.Width < 3
+head(iris.practice)
+
+#another method
+iris.practice$median.split[iris.practice$Sepal.Width < 3] <- "low"
+iris.practice$median.split[iris.practice$Sepal.Width >= 3] <- "high"
+
+#another method
+iris.practice$median.split2 <- ifelse(test = iris.practice$Sepal.Width<3, yes = "low", no = "high")
+
+iris.practice$median.split3 <- as.factor(ifelse(test = iris.practice$Sepal.Width<3, yes = "low", no = "high"))
+
+xtabs(~ Sepal.Width + median.split, iris.practice)
+xtabs(~ Sepal.Width + median.split2, iris.practice)
+xtabs(~ Sepal.Width + median.split3, iris.practice)
 
 
 ```
@@ -32,6 +83,18 @@ output: html_document
     
 ```{r}
 
+my.iris <- iris
+
+#Create a column for Plant ID 
+my.iris$PlantID <- 1:nrow(my.iris)
+
+my.iris.long <- gather(my.iris, "measurement", "centimeters", Sepal.Length : Petal.Width) 
+head(my.iris.long)
+
+#seperate(data, column, where to separate, what to name new columns)   use"\\." to ensure you split along the dot. if you just use sep = "." it will try to split on every character
+my.iris.long <- separate(my.iris.long, measurement, sep = "\\.", c("plant.part", "dimension"))
+head(my.iris.long)
+summary(my.iris.long)
 
 ```
 
