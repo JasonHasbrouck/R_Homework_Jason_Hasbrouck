@@ -58,7 +58,7 @@ attack.means
 
 ```
 
-3. Get your data into "long" (aka "tidy") format, if it isn't already
+2. Get your data into "long" (aka "tidy") format, if it isn't already
 
 ```{r}
 #Data is currently in long format
