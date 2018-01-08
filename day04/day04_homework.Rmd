@@ -1,0 +1,58 @@
+---
+title: "Day 4 Homework"
+output: html_document
+---
+
+1. Find some aspect of your data that needs to be combined or merged in some way.  This could be a variety of things:
+  - multiple "sheets" in an Excel
+  - multiple files that should be combined into one data set
+  - properties that need to be merged in to one data set. For example:
+    - you have a table of subject properties (gender, handedness, etc.) that need to be merged into the item-level data
+    - you have other information on countries (population, etc.) that need to be merged in
+  - if you DON'T have this naturally-occurring issue, figure out a way to manufacture it. For example:
+    - split up your data into chunks
+    - make up some new table of information that you want to merge in
+  - Explain (in words) what you are trying to do
+  - Use binding/merging commands to accomplish this
+  - Complete at least ONE example of binding and ONE example of merging
+
+```{r}
+#BINDING: To practice binding by rows, I will create seperate variables for terrorism attacks that occured in the USA for  each year from 2013 through 2016. Then I will recombine the variables from each year to make a data frame that contains terrorist attacks in the USA from 2013 through 2016. 
+library(dplyr)
+library(readxl)
+terrorism <- read_excel("~/Desktop/R Homework/R_Homework_Jason_Hasbrouck/terrorism.xlsx")
+
+my.terrorism <- terrorism
+str(my.terrorism)
+
+USA.attacks <-droplevels(my.terrorism[my.terrorism$country == "217",  ])
+  
+USA.2013 <- droplevels(USA.attacks[USA.attacks$iyear == "2013",  ])
+
+USA.2014 <- droplevels(USA.attacks[USA.attacks$iyear == "2014",  ])
+
+USA.2015 <- droplevels(USA.attacks[USA.attacks$iyear == "2015",  ])
+
+USA.2016 <- droplevels(USA.attacks[USA.attacks$iyear == "2016",  ]) 
+
+USA.attacks.reassembled <- rbind.data.frame(USA.2013, USA.2014, USA.2015, USA.2016)
+
+USA.attacks2.dplyr <- bind_rows(USA.2013, USA.2014, USA.2015, USA.2016)
+summary(USA.attacks2.dplyr)
+
+
+
+#MERGING: To practice merging, i will attempt to combine the data for attacks that occured in 2014 and 2015 by combining the iyear column ... NOTE: I got some weird results because the column lenghts were unequal for each year, thus there were a lot of NA's produced. 
+?merge
+
+USA.2014.2 <- droplevels(USA.2014[1:5])
+USA.2015.2 <- droplevels(USA.2015[c(1,6,7,8,9)])
+
+USA.merge1 <- merge(USA.2014.2, USA.2015.2, all = TRUE)
+
+USA.merge2 <- merge(USA.2014.2, USA.2015.2, all = FALSE)
+
+USA.full_join <- full_join(USA.2014.2, USA.2015.2)
+
+
+```

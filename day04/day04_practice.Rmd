@@ -1,0 +1,124 @@
+---
+title: "Day 4 Practice"
+output: html_document
+---
+
+1. What are the four primary/basic data types in R?
+   - Practice creating a vector of each data type
+   - Using c(), concatenate pairs of these vectors together
+   - What happens?  What data types are coerced to what?
+
+```{r}
+numbers <- 5:8
+class(numbers)
+doubles <- c(1.1, 73, 300, -5.45)
+class(doubles)
+typeof(doubles)
+characters <- c("Alice", "Bob", "Charlie", "Daisy")
+class(characters)
+factors <- as.factor(c("Red", "Blue", "Green", "Yellow"))
+class(factors)
+levels(factors)
+factors <- factor(c("Red", "Blue", "Green", "Yellow"), levels = c("Red", "Blue", "Green", "Yellow"))
+levels(factors)
+logicals <- c(TRUE, FALSE, FALSE, TRUE)
+class(logicals)
+
+c(numbers, doubles)
+class(c(numbers, doubles))
+
+c(numbers, characters)
+class(c(numbers, characters))
+
+x <- c(numbers, doubles)
+c(x, characters)
+
+c(numbers, factors)
+class(c(numbers, factors))
+
+c(doubles, factors)
+class(c(doubles, factors))
+
+c(characters, factors)
+class(c(characters, factors))
+c(characters, as.character(factors))
+
+c(numbers, logicals)
+class(c(numbers, logicals))
+
+if(TRUE) print("yep, it's true")
+if(FALSE) print("yep, it's true")
+if(0) print("yep, it's true")
+if(1) print("yep, it's true")
+if(33) print("yep, it's true")
+if(-33) print("yep, it's true")
+if("Bob") print("yep, it's true")
+
+c(characters, logicals)
+class(c(characters, logicals))
+
+c(factors, logicals)
+class(c(factors, logicals))
+
+c(numbers, c("1", "2", "3", "4"))
+c(numbers, as.numeric(c("1", "2", "3", "4")))
+as.numeric("Bob")
+
+```
+
+2. Make a copy of the `iris` data frame
+  - Using `sample()` pull the data apart into two random batches
+  - Put the pieces back together with `rbind()`
+  - Put the pieces back together with `bind_rows()` from the `dplyr` package, creating an ID that keeps track of which piece is which
+  
+  
+```{r}
+
+
+```
+
+3. Make a copy of the `iris` data frame
+  - using [ , ] notation, pull the data frame into two sets of different columns
+  - Put the pieces back together with `cbind()`
+  - Put the pieces back together with `bind_cols()` from the `dplyr` package
+
+```{r}
+
+
+```
+
+4. Run the following code to create a new small data frame with some additional information about iris species
+
+```{r}
+iris.info <- data.frame(Plant = c("setosa", "virginica", "limniris"),
+                        State = c("Alaska", "Tennessee", "Louisiana"),
+                        Rating = c(1, 5, 15))
+```
+
+Now merge this information with the `iris` data to create a new data frame. Using the `merge()` function, experiment with all = TRUE and all = FALSE. Also experiment with the `dplyr` join functions:
+  - `inner_join()`
+  - `full_join()`
+  - `left_join()`
+  - `right_join()`
+  - `semi_join()`
+  - `anti_join()`
+  
+```{r}
+nrow(iris)
+iris.merge1 <- merge(iris, iris.info) # default all = FALSE
+nrow(iris.merge1)
+iris.merge2 <- merge(iris, iris.info, by.x = "Species", by.y = "Plant") # default all = FALSE
+nrow(iris.merge2)
+summary(iris.merge2)
+
+iris.merge3 <- merge(iris, iris.info, by.x = "Species", by.y = "Plant", all = TRUE) 
+nrow(iris.merge3)
+summary(iris.merge3)
+
+iris.merge4 <- left_join(iris, iris.info, by = c("Species" = "Plant"))
+iris.merge4$Species <- as.factor(iris.merge4$Species)
+nrow(iris.merge4)
+summary(iris.merge4)
+
+```
+

@@ -1,0 +1,255 @@
+---
+title: "Day 5 Lecture"
+output: html_document
+---
+
+# Outline
+  - Review Homework 4
+  - Merging with `merge()`
+  - PRACTICE: merging
+  - Manipulating and transforming variables
+  - PRACTICE: transformations
+  - Reshaping data & "tidy" data
+  - SPLIT-APPLY-COMBINE
+  - Aggregation (e.g., cells means)
+  - PRACTICE: reshaping & aggregation
+  - Pipe syntax from `magrittr`
+  - Subsetting in `dplyr`
+  - Complex objects
+  - PRACTICE
+
+# Review
+
+# PRACTICE #1
+
+# Data transformations    
+## Creating new columns
+
+```{r}
+mysleep <- sleep
+mysleep
+mysleep$Study <- "Study1"
+mysleep$Study2 <- c("Study1", "Study2")
+mysleep$noise <- rnorm(20)
+mysleep$noise2 <- rnorm(10)
+#mysleep$noise2 <- rnorm(8)
+mysleep
+```
+
+## Simple column transformations
+
+```{r}
+mysleep <- sleep
+mysleep$extra2 <- mysleep$extra * 2
+mysleep$extra3 <- log(mysleep$extra + 10)
+mysleep
+mysleep$extra2 <- mysleep$extra2 - 4
+mysleep
+mysleep$extra2 <- NULL  # deletes the column
+mysleep
+mysleep$extra3 <- NA
+mysleep
+mysleep$three <- 3
+mysleep
+# mysleep$four <- c(1, 2, 3) # doesn't work
+mysleep$five <- c(1, 2, 3, 4) # does work (recycling)
+mysleep
+
+rep(2, times = 10)
+rep(2:4, 10)
+rep(2:4, each = 10)
+rep(2:4, times = 3, each = 10)
+rep(1:2, 3, each = 5)
+c(rep(1:2, 3, each = 5), rep(1:8, 2, each = 3), 1:10)
+
+```
+
+# Keeping "tidy" data
+
+    - `tidyr`
+    - https://cran.r-project.org/web/packages/tidyr/vignettes/tidy-data.html
+    - http://vita.had.co.nz/papers/tidy-data.html
+    - Principle: variables/data in columns, observations/cases in rows
+    - wide vs. long data
+      - usually long data is easier to work with
+      - sometimes wide formats are useful/convenient
+      - moving between the two is important!
+    - `reshape2` also very powerful package, if `tidyr` can't handle something
+
+## Reshaping with `tidyr` 
+   
+```{r}
+library(tidyr)
+mysleep <- sleep
+mysleep
+levels(mysleep$group) <- c("pre", "post")
+
+# spread(yourdata, factor.to.spread.by, column.with.values)
+
+# QUICK PRACTICE: compute gains
+
+# gather(yourdata, new.factor.column.name, measure.column.name, columns.to.gather)
+
+```
+
+## PRACTICE #2 & #3
+
+## Splitting up columns
+  - another "tidy data" goal
+  - if a column represents multiple things/datapoints, split it up!
+  - use `separate()` from `tidyr`
+
+```{r}
+colnames(who)
+who.long <- gather(who, stuff, counts, new_sp_m014:newrel_f65)
+
+who.long$stuff <- gsub("newrel", "new_rel", who.long$stuff)
+
+who.long <- separate(who.long, stuff, sep = "_", c("newold", "type", "gender.age"))
+summary(who.long)
+head(who.long)
+
+```
+
+# Data cleaning
+## A guideline template for data cleaning
+  1. Get the data to read in to R
+  2. Check all columns to make sure data is getting read in correctly
+  3. Check NAs, decide what to do with them
+  4. Remove excessive rows or other "defective" rows
+  5. Reshape as needed (tend towards "long" formats)
+  6. Get data out of column *names*, and into columns (variables)
+  7. Fix/clean up column names
+  8. Re-code factors as needed
+  
+## Reading data
+  - find a good `read.X()` function, where X = your type of data
+    - `read.table()` is the basic one
+    - `read.csv()` and `read.delim()` are convenience "wrappers" for `read.table()`, for CSV and tab-delimited files, respectively
+    - `read.spss()` and `read.dta()` from the `foreign` package for SPSS and Stata files
+  - for messier or more primitive kinds of files in weird formats, use `readLines()`, or `scan()` to pull in the data in a very raw format, which you will then need to format in R
+
+## Check all columns
+
+## Check NAs
+  - use summary()
+
+## Remove rows/columns as needed
+
+## Reshape as needed
+
+## Get data out of column names, into variables
+
+## Fix/improve column names
+
+## Re-code factors as needed
+
+
+# Split-apply-combine with the `dplyr` package
+==============================================
+
+## Aggregation
+
+```{r}
+library(dplyr)
+library(reshape2)
+
+myff <- french_fries
+head(myff)
+
+# make long
+myff.long <- gather(myff, flavor, rating, potato:painty)
+head(myff.long)
+
+# get "cell means"
+ff.means <- summarize(group_by(myff.long, treatment, flavor), mean = mean(rating))
+ff.means
+ff.means <- summarize(group_by(myff.long, treatment, flavor), mean = mean(rating, na.rm = TRUE))
+ff.means
+
+# other summary computations
+ff.summaries <- summarize(group_by(myff.long, treatment, flavor), mean = mean(rating, na.rm = TRUE), std.dev = sd(rating, na.rm = TRUE), N = length(rating))
+ff.summaries
+
+```
+
+## Forward-pipe operator (from `magrittr` package)
+["This is not a pipe"](https://en.wikipedia.org/wiki/The_Treachery_of_Images)
+
+  - `%>%` operator
+  - effect: pass the results of the thing on the left to the first argument of the thing on the right
+  - very commonly used in `dplyr`
+
+```{r}
+x <- 1:10
+mean(log(x + 2))
+
+(x + 2) %>% log() %>% mean()
+
+summarize(group_by(myff.long, treatment, flavor), mean.rating = mean(rating, na.rm = TRUE))
+
+# same as above, using the %>% operator
+group_by(myff.long, treatment, flavor) %>% summarize(mean.rating = mean(rating, na.rm = TRUE))
+
+```
+
+## Subsetting with `dplyr`
+  - `filter()` is for subsetting rows
+  - `select()` is for subsetting columns
+
+```{r}
+sleep
+sleep[sleep$group == 1, ]
+filter(sleep, group == 1) # same results
+
+sleep[sleep$group == 1 & sleep$extra > 0.2, ]
+filter(sleep, group == 1, extra > 0.2) # same results
+
+sleep[ , c("ID", "extra")]
+select(sleep, ID, extra)
+select(sleep, 3, 1)
+select(sleep, c(3, 1))
+#select(sleep, c("ID", "extra")) # doesn't work
+select(sleep, c(ID, extra))
+select_(sleep, "ID", "extra") # "underscore" variants of dplyr functions:
+                              #   - can use strings to identify objects
+                              #   - useful for more programmatic applications
+
+```
+
+
+# Notes on complex objects
+
+  - use `names()` and `str()` to look at the structure of a complex object
+  - most complex objects have a list-like structure
+  - S3 vs. S4 classes
+    - `$` notation works for S3
+    - Try `@` instead for S4 classes
+    - For more on S4: http://adv-r.had.co.nz/OO-essentials.html
+
+```{r}
+myff <- french_fries
+results <- lm(potato ~ treatment, data = myff)
+results
+summary(results)
+# plot(results)
+class(results)
+names(results)
+str(results)
+plot(results$residuals)
+results.summary <- summary(results)
+names(results.summary)
+results.summary$adj.r.squared
+results.summary$coefficients
+class(results.summary$coefficients)
+condition.pvals <- results.summary$coefficients[c("treatment2", "treatment3"), "Pr(>|t|)"]
+condition.pvals
+
+# str(summary(results))
+# ?lm
+```
+
+The adjusted $R^2$ for this model is `r results.summary$adj.r.squared`.
+
+
+

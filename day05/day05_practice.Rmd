@@ -1,0 +1,73 @@
+---
+title: "Day 5 Practice"
+output: html_document
+---
+
+1. Make another copy of the iris data set
+  - Using `data.frame()` create a (small) table that assigns a color to each species.  That is, make a column called Species and a column called Color, with one row per species
+  - use `merge()` to merge the data into the copy of the iris data set
+  - create another table with an additional species (and color)
+  - merge this new table with iris. What happened?
+  - create one more table matching species to color, with only two rows, missing setosa
+  - merge this new table with the copy of iris. What happened?
+
+```{r}
+
+```
+
+2. Make (yet another) copy of the iris data set
+  - Create a column that takes the log of the Sepal.Width
+  - Create a column that represents the multiplication of Sepal.Width by Sepal.Length
+  - Create a "median split" column on Sepal.Width. In other words, calculate the median of Sepal.Width, and then create a column that indicates whether the value in that row is less than the median or not
+  
+```{r}
+
+
+```
+
+3. Start with (yes, you guessed it!) another copy of the iris data set
+  - Use `gather()` to convert this wide data to long format
+    - You should be "gathering up" all of the columns with measurements
+  - "Tidy" up the new factor column by splitting it into two columns: one designating dimension (width vs. length), one designating flower part (sepal vs. petal)
+    
+```{r}
+
+
+```
+
+4. Continue working with the "long" iris data from previous problem
+  - using `dplyr` functions, get the mean for each "cell" in the species x part x dimension design
+  - make the results "wide", with different columns for each species
+
+```{r}
+
+```
+
+5. Use the sample data in the scottdata folder
+  - run a logistic regression, using `glm()`, where the "Merged" variable is the (binary) dependent variable, and "WithinMinPairs" is the predictor.
+  - Hint: the basic usage of `glm()` is:
+
+results <- glm(DV ~ predictor1 + predictor2 + ...  ,                               
+               data = dataframe.object, family = "binomial")
+               
+```{r}
+practice <- read.csv("scottdata/CognitionPaperFinalData.csv")
+
+```
+
+  - use `summary()` to display the results.
+  
+```{r}
+
+```
+
+  - using INLINE code, report the estimate, standard error, and p-value for the WithinMinPairs coefficient.  Hint #1: save the summary as an object, and pull values from that. Hint #2: use `str()` to figure out how to extract these values. Hint #3: save the individual results as objects first, then put in inline code.
+
+```{r}
+
+```
+
+The estimate is `r`, the standard error is `r`, and the p-value is `r`.
+
+EXTRA CREDIT: figure out how to display the above results with only a few decimal places
+

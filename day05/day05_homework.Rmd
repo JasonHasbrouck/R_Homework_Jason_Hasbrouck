@@ -1,0 +1,38 @@
+---
+title: "Day 5 Homework"
+output: html_document
+---
+
+0. Reload your data, and re-use the code you already have for getting things formatted nicely (columns renamed, factors relabeled, etc.)
+
+```{r}
+
+```
+
+1. Aggregate (e.g., get mean/median/max/something) of some numerical variable, over one or more factors.  Use `group_by()` plus `summarize()` from the `dplyr` package. You may or may not need to reshape the data first!
+
+```{r}
+
+```
+
+2. Run TWO DIFFERENT simple analyses or statistical tests, such as linear regression (`lm()`), logistic regression (`glm()`), correlation test (`cor.test()`), t-test (`t.test()`), or non-parametric tests (e.g., `wilcox.test()`).  For each of these:
+  - Describe why you are doing this analysis, i.e., what question is it answering?
+  - I won't judge you on statistical expertise!  (though I will make comments if I think I can be helpful)
+  - Report some key statistics from the analysis, using **inline** code. HINT: outside of an R code chunk, use `r codehere` format.
+  
+```{r}
+
+```
+
+3. Get your data into "long" (aka "tidy") format, if it isn't already
+
+```{r}
+
+```
+
+
+
+
+
+
+
