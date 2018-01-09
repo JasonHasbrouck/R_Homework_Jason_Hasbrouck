@@ -47,17 +47,6 @@ attack.means
 
 ```
 
-2. Run TWO DIFFERENT simple analyses or statistical tests, such as linear regression (`lm()`), logistic regression (`glm()`), correlation test (`cor.test()`), t-test (`t.test()`), or non-parametric tests (e.g., `wilcox.test()`).  For each of these:
-  - Describe why you are doing this analysis, i.e., what question is it answering?
-  - I won't judge you on statistical expertise!  (though I will make comments if I think I can be helpful)
-  - Report some key statistics from the analysis, using **inline** code. HINT: outside of an R code chunk, use `r codehere` format.
-  
-```{r}
-
-
-
-```
-
 2. Get your data into "long" (aka "tidy") format, if it isn't already
 
 ```{r}

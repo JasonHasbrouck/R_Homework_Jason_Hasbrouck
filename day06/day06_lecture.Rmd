@@ -1,0 +1,267 @@
+---
+title: "Day 6 Lecture"
+output: html_document
+---
+
+# Review
+
+```{r}
+
+```
+
+# Notes on complex objects
+
+  - use `names()` and `str()` to look at the structure of a complex object
+  - most complex objects have a list-like structure
+  - S3 vs. S4 classes
+    - `$` notation works for S3
+    - Try `@` instead for S4 classes
+    - For more on S4: http://adv-r.had.co.nz/OO-essentials.html
+
+```{r}
+library(tidyverse)
+library(reshape2)
+myff <- french_fries
+results <- lm(potato ~ treatment, data = myff)
+results
+summary(results)
+# plot(results)
+class(results)
+names(results)
+str(results)
+plot(results$residuals)
+results.summary <- summary(results)
+names(results.summary)
+str(results.summary)
+results.summary$adj.r.squared
+results.summary$coefficients
+class(results.summary$coefficients)
+condition.pvals <- results.summary$coefficients[c("treatment2", "treatment3"), "Pr(>|t|)"]
+condition.pvals
+
+# ?lm
+```
+
+The adjusted $R^2$ for this model is `r results.summary$adj.r.squared`.
+
+# PRACTICE
+
+# Graphics overview
+
+http://accidental-art.tumblr.com/
+
+## The importance of graphing
+
+```{r}
+?anscombe
+example("anscombe")
+```
+
+## Two systems
+
+  - "base" graphics
+  - "grid" graphics
+  - See *R Graphics* by Paul Murrell for a very thorough "deep-dive" into these implementations:  https://www.stat.auckland.ac.nz/~paul/RG2e/
+
+### Base graphics
+  - more "primitive"
+  - can also be much faster than grid
+  - lots of isolated plot functions
+  - lots of weird little parameters to worry about
+  - some handy quick-plot functions from base graphics:
+    - `plot()` : a generic function that will often produce something interesting, can do scatterplots with a formula `y ~ x`
+    - `hist()` : histogram of a vector
+    - `boxplot()` : boxplot, using a formula `variable ~ grouping.factor`
+
+### Grid graphics
+  - better for more "high-level" plots
+  - much more complex underlying system (IMHO)
+  - more powerful and extendable
+  - the basis of extremely popular packages such as `lattice` and `ggplot2`
+
+## Graphics in other packages
+  - many packages will have some kind of graphics functions in them, for visualizing specific kinds of things
+  - these will often be in base graphics, "pre-canned", etc.
+  - the two best more general-purpose graphics packages are `lattice` and `ggplot2`
+  - `ggplot2` is another Hadley Wickham project, and has the most documentation, examples, and is currently most widely used
+
+# Using `ggplot2`
+
+## A "Grammar of Graphics"
+  - based on work by Leland Wilkinson, a "theory" of graphic display of data
+  - Hadley implemented this framework as his dissertation
+  - `ggplot2` is the overhauled version of the original implementation, and it is still under active development
+  - the idea is to implement a general system for mapping data variables to *aesthetics* (Wilkinson's term), i.e., visual dimensions (x, y, color, etc.)
+  - allows for high-level control of the structure of a plot, to allow for flexible, powerful visualizations
+  - the place for documentation: http://docs.ggplot2.org/current/
+  - another good site: http://www.cookbook-r.com/Graphs/
+  
+## Basic structure and concepts
+
+  - unlike base graphics, the *value* of `ggplot2` objects is a complex object, and `print()`-ing them renders the graph.
+  - the value of the object is built up by adding *layers*
+  - start with a call to `ggplot()` that specifies the data and some mappings of variables to aesthetics
+  - add "geoms" to actually render something
+  - add other things for fine control over graphical parameters, etc.
+
+## Graphing the `iris` package
+
+```{r}
+library(ggplot2)
+myris <- iris
+summary(myris)
+
+ggplot(data = myris, aes(x = Sepal.Length)) + geom_histogram()
+
+ggplot(myris, aes(x = Sepal.Length)) + geom_histogram(binwidth = .5)
+
+ggplot(myris, aes(x = Sepal.Length)) + geom_histogram(binwidth = .01)
+
+hist(myris$Sepal.Length)
+
+mybaseplot <- ggplot(myris, aes(x = Sepal.Length))
+
+mybaseplot + geom_histogram(binwidth = .2)
+
+names(mybaseplot)
+str(mybaseplot)
+
+base.density <- mybaseplot + geom_density(adjust = .5, fill = "grey")
+base.density
+
+mydensity <- geom_density(adjust = .5, fill = "grey")
+
+mybaseplot + mydensity
+
+```
+
+```{r}
+colors()
+?RGB
+```
+
+### Saving plots
+
+```{r}
+pdf("myplot.pdf", width = 10, height = 4)
+ggplot(myris, aes(x = Sepal.Length)) + geom_histogram()
+dev.off()
+
+?Devices
+
+# look into other PDF readers if you want to be 
+# able to leave the file "open" (i.e., displayed)
+# on your computer while you are editing/changing
+# the file
+```
+
+## Some more parameters
+
+```{r}
+# pdf("bunch of plots.pdf")
+ggplot(myris, aes(x = Sepal.Length, y = Sepal.Width)) + geom_point()
+
+ggplot(myris, aes(x = Sepal.Length, y = Sepal.Width)) + geom_point() + theme_classic()
+
+myscatterplot <- ggplot(myris, aes(x = Sepal.Length, y = Sepal.Width)) + geom_point()
+myscatterplot
+myscatterplot + theme_classic()
+myscatterplot + theme_minimal()
+
+ggplot(myris, aes(x = Sepal.Length, y = Sepal.Width)) + 
+  geom_point(aes(color = Species), size = 10) + 
+  theme_minimal()
+
+ggplot(myris, aes(x = Sepal.Length, y = Sepal.Width)) + 
+  geom_point(aes(color = Petal.Width), size = 10) + 
+  theme_minimal()
+
+ggplot(myris, aes(x = Sepal.Length, y = Sepal.Width)) + 
+  geom_point(aes(color = Species, size = Petal.Width)) + 
+  theme_minimal()
+
+ggplot(myris, aes(x = Sepal.Length, y = Sepal.Width)) + 
+  geom_point() + 
+  geom_smooth()
+
+ggplot(myris, aes(x = Sepal.Length, y = Sepal.Width)) + 
+  geom_point() + 
+  geom_smooth(method = "lm")
+
+ggplot(myris, aes(x = Sepal.Length, y = Sepal.Width)) + 
+  geom_point(aes(color = Species), size = 4) + 
+  theme_minimal() +
+  geom_smooth(method = "lm")
+
+ggplot(myris, aes(x = Sepal.Length, y = Sepal.Width, color = Species)) + 
+  geom_point(size = 4) + 
+  theme_minimal() +
+  geom_smooth(method = "lm")
+
+# dev.off()
+
+```
+
+### More on colors
+  - http://colorbrewer2.org/
+  
+```{r}
+ggplot(myris, aes(x = Sepal.Length, y = Sepal.Width, color = Species)) + 
+  geom_point(size = 4) + 
+  theme_minimal() +
+  geom_smooth(method = "lm") + 
+  scale_color_brewer(palette = "Set1")
+
+ggplot(myris, aes(x = Sepal.Length, y = Sepal.Width, color = Species)) + 
+  geom_point(size = 4) + 
+  theme_minimal() +
+  geom_smooth(method = "lm") + 
+  scale_color_manual(values = c("pink", "goldenrod", "steelblue"))
+
+my.palette <- scale_color_manual(values = c("pink", "goldenrod", "steelblue"))
+
+ggplot(myris, aes(x = Sepal.Length, y = Sepal.Width, color = Species)) + 
+  geom_point(size = 4) + 
+  theme_minimal() +
+  geom_smooth(method = "lm") +
+  my.palette
+
+```
+
+### Facetting
+
+```{r}
+ggplot(myris, aes(x = Sepal.Length)) + geom_histogram() + 
+  facet_wrap(~ Species)
+
+ggplot(myris, aes(x = Sepal.Length)) + geom_histogram() + 
+  facet_grid(Species ~ .)
+
+ggplot(myris, aes(x = Sepal.Length)) + geom_histogram() + 
+  facet_grid(. ~ Species)
+
+myris.tidy <- gather(myris, variable, cm, Sepal.Length:Petal.Width) %>%
+  separate(variable, sep = "\\.", c("part", "dimension"))
+head(myris.tidy)
+
+ggplot(myris.tidy, aes(cm)) + geom_histogram() + 
+  facet_grid(part ~ dimension)
+
+ggplot(myris.tidy, aes(cm)) + geom_histogram(aes(fill = Species)) + 
+  facet_grid(part ~ dimension)
+
+ggplot(myris.tidy, aes(cm)) + geom_density(aes(fill = Species), alpha = .5) + 
+  facet_grid(part ~ dimension)
+
+ggplot(myris.tidy, aes(cm)) + geom_density(aes(fill = Species), alpha = .5) + 
+  facet_grid(part ~ dimension, scales = "free")
+
+ggplot(myris.tidy, aes(cm)) + geom_density(aes(fill = Species), alpha = .5) + 
+  facet_wrap(~ part + dimension, scales = "free")
+
+```
+
+# Going further
+
+http://ggplot2.tidyverse.org/reference/
+
