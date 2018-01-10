@@ -12,24 +12,109 @@ Find three relationships in your data.  For each relationship, do the following:
 3. Reshape your data as needed.
 
 ```{r}
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(tidyverse)
+library(reshape2)
+library(readxl)
+library(RColorBrewer)
+
+terrorism <- read_excel("~/Desktop/R Homework/R_Homework_Jason_Hasbrouck/terrorism.xlsx")
+my.terrorism <- terrorism
+
+my.terrorism$iyear <- as.factor(my.terrorism$iyear)
+my.terrorism$imonth <- as.numeric(my.terrorism$imonth)
+my.terrorism$attacktype1 <- as.numeric(my.terrorism$attacktype1)
+my.terrorism$attacktype1_txt <- as.factor(my.terrorism$attacktype1_txt)
+
+my.terrorism$weaptype1_txt <- as.factor(my.terrorism$weaptype1_txt)
+
+
+my.terrorism$attacktype1b <- my.terrorism$attacktype1
+levels(my.terrorism$attacktype1b) <- c("assassination", "armed.assault", "bombing.explosion", "hijacking", "hostage.barricade", "hostage.kidnapping", "facility.attack", "unarmed.assault", "unknown" )
+my.terrorism$attacktype1b <- as.factor(my.terrorism$attacktype1b)
+my.terrorism$attack.ID <- 1:nrow(my.terrorism)
+my.terrorism$casualty <- my.terrorism$nkill + my.terrorism$nwound
+my.terrorism$casualty <- as.numeric(my.terrorism$casualty)
+
+
+attack.means <- summarize(group_by(my.terrorism, attacktype1b, iyear), mean = mean(casualty, na.rm = TRUE))
+attack.means
 
 ```
 
 4. Use ggplot2 to create your graphs.
 
+#Graph 1: Annual Terrorist Attack Casualties by Region
 ```{r}
+Graph.1a <- ggplot(my.terrorism, aes(x = iyear, y = casualty, fill = region_txt))+geom_bar(stat = "identity")
+Graph.1a
+```
+
+#Graph 2: Annual Terrorist Attack Casualties by Weapon Type
+```{r}
+Graph.2a <- ggplot(my.terrorism, aes(x = iyear, y = casualty, fill = weaptype1_txt))+geom_bar(stat = "identity")
+Graph.2a
 
 ```
 
+#Graph 3: Monthly Terrorist Attack Casualties
+```{r}
+Graph.3a <- ggplot(my.terrorism, aes(x = imonth, y = casualty, fill = iyear))+geom_bar(stat = "identity")
+Graph.3a
+
+```
+
+
 5. Fiddle with colors, axis labels, themes, etc. until the plot looks "publication ready" to you.  Try to change at least one thing per plot.
 
+#Graph 1: Annual Terrorist Attack Casualties by Region
 ```{r}
+levels(my.terrorism$iyear)
+levels(my.terrorism$iyear) <- c("2013", "2014", "2015", "2016")
+my.terrorism$iyear = factor(my.terrorism$iyear, levels = c("2013", "2014", "2015", "2016"))
+levels(my.terrorism$iyear)
+
+
+Graph.1b <- ggplot(my.terrorism, aes(x = iyear, y = casualty, fill = region_txt))+geom_bar(name = "Region", stat = "identity", position = "dodge") +xlab("Year")+ylab("Number of Casualties")+ scale_y_log10(breaks = seq(0, 2000, 250)) + scale_color_brewer(palette = "Set1", name = "Iris species") + theme(text = element_text(family = "serif", size = 10))+ggtitle("Annual Terrorist Attack Casualties by Region") + theme(plot.title = element_text(hjust = 0.5))+facet_wrap(~region_txt)
+
+Graph.1b 
+```
+
+#Graph 2: Annual Terrorist Attack Casualties by Weapon Type
+
+
+```{r}
+levels(my.terrorism$weaptype1_txt)
+
+levels(my.terrorism$weaptype1_txt) <- c("Biological", "Chemical", "Explosives", "Fake Weapons", "Firearms", "Incendiary", "Melee", "Other", "Sabotage Equipment", "Unknown", "Vehicle")
+levels(my.terrorism$weaptype1_txt)
+
+Graph.2b <- ggplot(my.terrorism, aes(x = iyear, y = casualty, fill = weaptype1_txt))+geom_bar(stat = "identity", position = "dodge") +ggtitle("Annual Terrorist Attack Casualties by Weapon Type") + theme(plot.title = element_text(hjust = 0.5))
+
+Graph.2b
+
+```
+
+#Graph 3: Monthly Terrorist Attack Casualties
+```{r}
+Graph.3b <- ggplot(my.terrorism, aes(x = imonth, y = casualty, fill = iyear))+geom_histogram(stat = "identity", binwidth = 1)+scale_x_continuous(name = "Month", breaks = 1:12, labels = month.name)+ggtitle("Monthly Terrorist Attack Casualties") + theme(plot.title = element_text(hjust = 0.5))
+
+Graph.3b
 
 ```
 
 6. Save all plots to a format that you could use in a paper.  HINT: PNG works well for pasting into Word documents.
 
 ```{r}
-
+pdf("day7_homework.pdf")
+print(Graph.1a)
+print(Graph.1b)
+print(Graph.2a)
+print(Graph.2b)
+print(Graph.3a)
+print(Graph.3b)
+dev.off()
 ```
 
