@@ -81,13 +81,15 @@ ggplot(myris, aes(cm)) + geom_histogram()
 
 # method #1: change your data
 myris$centimeters <- myris$cm
-# could also use colnames
 
+# could also use colnames
 ggplot(myris, aes(centimeters)) + geom_histogram()
 
 # method #2: "shortcut" convenience function
 ggplot(myris, aes(cm)) + geom_histogram() + xlab("centimeters")
 
+
+                    #(data, remove column)      spread(var1, var2)
 myris.wide <- select(myris, -centimeters) %>% spread(dimension, cm)
 
 ggplot(myris.wide, aes(x = Length, y = Width)) + geom_point() + xlab("length of the part") + ylab("width of the part")
@@ -132,6 +134,7 @@ set1.colors <- scale_color_brewer(palette = "Set1")
 myris.scatter2 
 myris.scatter2 + set1.colors
 
+#define shapes in legend
 myris.scatter3 <- ggplot(myris.wide, aes(Length, Width)) + geom_point(aes(color = Species, shape = Species), size = 4)
 myris.scatter3
 
@@ -150,7 +153,9 @@ ggplot(myris.wide2, aes(x = Length, Width)) + geom_point(aes(color = Species), s
 myris.scatter2 + scale_color_brewer(palette = "Set1", name = "Iris species") + theme(text = element_text(family = "serif", size = 20))
 
 #windowsFonts()
-#quartzFonts()
+
+#for Mac Computers
+quartzFonts()
 
 windowsFonts(awesome = windowsFont("TT Comic Sans MS"))
 windowsFonts()

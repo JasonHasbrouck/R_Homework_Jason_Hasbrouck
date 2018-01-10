@@ -8,6 +8,18 @@ In this practice, let's explore data on tipping, in the `tips` data frame from t
 0. First get a little familiar with the structure of the data, using `summary()`, `head()`, etc.  What are the numeric variables?  What are their units? What about factors? Are factor levels sensible?
 
 ```{r}
+library(reshape2)
+library(ggplot2)
+
+mytips <- tips
+head(tips)
+summary(tips)
+str(tips)
+
+#Numeric Variables: total_bill & tip; their units are dollors
+
+#Factor Variables: sex, smoker, day, time; the levels are sensible
+
 
 ```
 
@@ -18,6 +30,16 @@ In this practice, let's explore data on tipping, in the `tips` data frame from t
     - try two different methods
   
 ```{r}
+plot1a <- ggplot(mytips, aes(total_bill, tip))+geom_point()
+plot1a
+
+plot1b <- ggplot(mytips, aes(total_bill, tip))+geom_point()
+         +xlab("Tip Amount")+ylab("Total Bill")
+plot1b
+
+plot1c <- ggplot(mytips, aes(total_bill, tip))+geom_point()+scale_x_continuous(name = "Tip Amount")+scale_y_continuous(name = "Total Bill")
+plot1c
+
 
 ```
 
@@ -27,6 +49,19 @@ In this practice, let's explore data on tipping, in the `tips` data frame from t
   - finally, use `labels = dollar` (made available by the `scales` package) to format the axis numbers as dollars
 
 ```{r}
+library(scales)
+plot2.log <- ggplot(mytips, aes(total_bill, tip))+geom_point() + xlab("Tip Amount") + ylab("Total Bill") + scale_x_log10()
+ 
+plot2.log
+
+plot2.break <- ggplot(mytips, aes(total_bill, tip))+geom_point() + xlab("Tip Amount") + ylab("Total Bill") + scale_x_log10(breaks = seq(0, 50, 5)) + scale_y_continuous(breaks = seq(0, 10, 2))
+ 
+plot2.break
+
+
+plot2.dollar <- ggplot(mytips, aes(total_bill, tip))+geom_point() + xlab("Tip Amount") + ylab("Total Bill") + scale_x_log10(labels = dollar, breaks = seq(0, 50, 5)) + scale_y_continuous(labels = dollar, breaks = seq(0, 10, 2))
+ 
+plot2.dollar
 
 ```
 
@@ -38,6 +73,30 @@ In this practice, let's explore data on tipping, in the `tips` data frame from t
   - finally, change the overall "theme" to either the "classic", "minimal", or "bw" theme
 
 ```{r}
+plot3.sex <- ggplot(mytips, aes(total_bill, tip, color = sex))+geom_point() + xlab("Tip Amount") + ylab("Total Bill") + scale_x_log10(labels = dollar,breaks = seq(0, 50, 5)) + scale_y_continuous(labels = dollar,breaks = seq(0, 10, 2))
+
+plot3.sex
+
+plot3.sex.brewer <- ggplot(mytips, aes(total_bill, tip, color = sex))+geom_point() + xlab("Tip Amount") + ylab("Total Bill") + scale_x_log10(labels = dollar,breaks = seq(0, 50, 5)) + scale_y_continuous(labels = dollar,breaks = seq(0, 10, 2))+ scale_color_brewer(palette = "Dark2")
+
+plot3.sex.brewer
+
+plot3.sex.manual <- ggplot(mytips, aes(total_bill, tip, color = sex))+geom_point() + xlab("Tip Amount") + ylab("Total Bill") + scale_x_log10(breaks = seq(0, 50, 5)) + scale_y_continuous(breaks = seq(0, 10, 2))+ scale_color_manual(values = c("pink1", "skyblue1"))
+
+plot3.sex.manual
+
+
+plot3.sex.regression <- ggplot(mytips, aes(total_bill, tip, color = sex))+geom_point() + xlab("Tip Amount") + ylab("Total Bill") + scale_x_log10(labels = dollar,breaks = seq(0, 50, 5)) + scale_y_continuous(labels = dollar,breaks = seq(0, 10, 2))+ scale_color_manual(values = c("pink1", "skyblue1"))+geom_smooth(method = "lm")
+
+plot3.sex.regression
+
+plot3.sex.loess <- ggplot(mytips, aes(total_bill, tip, color = sex))+geom_point() + xlab("Tip Amount") + ylab("Total Bill") + scale_x_log10(breaks = seq(0, 50, 5)) + scale_y_continuous(breaks = seq(0, 10, 2))+ scale_color_manual(values = c("pink1", "skyblue1"))+geom_smooth()  + theme_bw()
+
+plot3.sex.loess
+
+plot3.sex.classic <- ggplot(mytips, aes(total_bill, tip, color = sex))+geom_point() + xlab("Tip Amount") + ylab("Total Bill") + scale_x_log10(labels = dollar,breaks = seq(0, 50, 5)) + scale_y_continuous(labels = dollar,breaks = seq(0, 10, 2))+ scale_color_manual(values = c("pink1", "skyblue1"))+geom_smooth(method = lm)  + theme_classic()
+
+plot3.sex.classic
 
 ```
 
@@ -49,7 +108,17 @@ In this practice, let's explore data on tipping, in the `tips` data frame from t
   - finally, put the legend back to the default position, but change the levels, such that Male is given as the first level
   
 ```{r}
+plot4 <- ggplot(mytips, aes(total_bill, tip, color = sex))+geom_point() + xlab("Tip Amount") + ylab("Total Bill") + scale_x_log10(labels = dollar,breaks = seq(0, 50, 5)) + scale_y_continuous(labels = dollar,breaks = seq(0, 10, 2))+ scale_color_manual(name = "Gender", values = c("pink1", "skyblue1"))+geom_smooth(method = lm)  + theme_classic() +theme(legend.position = "top")
 
+plot4
+
+mytips$sex
+mytips$sex <- factor(mytips$sex, levels = rev(levels(mytips$sex)))
+mytips$sex
+
+plot4a <- ggplot(mytips, aes(total_bill, tip, color = sex))+geom_point() + xlab("Tip Amount") + ylab("Total Bill") + scale_x_log10(labels = dollar,breaks = seq(0, 50, 5)) + scale_y_continuous(labels = dollar,breaks = seq(0, 10, 2))+ scale_color_manual(name = "Gender", values = c("pink1", "skyblue1"))+geom_smooth(method = lm)  + theme_classic() + theme(text = element_text(family = "serif", size = 12))
+
+plot4a
 ```
 
 5. Let's explore how this pattern might vary for different days of the week.
@@ -59,6 +128,24 @@ In this practice, let's explore data on tipping, in the `tips` data frame from t
   
 ```{r}
 
+levels(mytips$day)
+levels(mytips$day) <- c("Friday", "Saturday", "Sunday", "Thursday")
+mytips$day = factor(mytips$day, levels = c("Thursday", "Friday", "Saturday", "Sunday"))
+levels(mytips$day)
+
+plot5 <- ggplot(mytips, aes(total_bill, tip, color = sex))+geom_point() + xlab("Tip Amount") + ylab("Total Bill") + scale_x_log10(labels = dollar,breaks = seq(0, 50, 5)) + scale_y_continuous(labels = dollar,breaks = seq(0, 10, 2))+ scale_color_manual(name = "Gender", values = c("pink1", "skyblue1"))+geom_smooth(method = lm)  + theme_bw() +theme(legend.position = "top") + facet_wrap(~day)
+
+
+
+plot5
+
+plot5a <- ggplot(mytips, aes(total_bill, tip, color = sex))+geom_point() + xlab("Tip Amount") + ylab("Total Bill") + scale_x_log10(labels = dollar,breaks = seq(0, 50, 5)) + scale_y_continuous(labels = dollar,breaks = seq(0, 10, 2))+ scale_color_manual(name = "Gender", values = c("pink1", "skyblue1"))+geom_smooth(method = lm)  + theme_bw() +theme(legend.position = "top") + facet_grid(.~day)
+
+plot5a
+
+plot5b <- ggplot(mytips, aes(total_bill, tip, color = sex))+geom_point() + xlab("Tip Amount") + ylab("Total Bill") + scale_x_log10(labels = dollar,breaks = seq(0, 50, 5)) + scale_y_continuous(labels = dollar,breaks = seq(0, 10, 2))+ scale_color_manual(name = "Gender", values = c("pink1", "skyblue1"))+geom_smooth(method = lm)  + theme_bw() +theme(legend.position = "top") + facet_grid(day~.)
+
+plot5b
 
 ```
 
@@ -69,6 +156,18 @@ In this practice, let's explore data on tipping, in the `tips` data frame from t
   - now add back the regression lines, but only plot a single regression line (i.e., not broken down by gender), remove the confidence interval (hint: look at the arguments for `geom_smooth()`), and make the line a dashed black line
   
 ```{r}
+
+plot6 <- ggplot(mytips, aes(total_bill, tip, color = sex, size=size))+geom_point() + xlab("Tip Amount") + ylab("Total Bill") + scale_x_log10(labels = dollar,breaks = seq(0, 50, 5)) + scale_y_continuous(labels = dollar,breaks = seq(0, 10, 2))+ scale_color_manual(name = "Gender", values = c("pink1", "skyblue1")) +geom_smooth(method = lm, se=FALSE,linetype = "dashed", color = "black")+ theme_bw() +theme(legend.position = "top") 
+
+plot6
+
+plot6a <- ggplot(mytips, aes(total_bill, tip, color = sex, size=size))+geom_point() + xlab("Tip Amount") + ylab("Total Bill") + scale_x_log10(labels = dollar,breaks = seq(0, 50, 5)) + scale_y_continuous(labels = dollar,breaks = seq(0, 10, 2))+ scale_color_manual(name = "Gender", values = c("pink1", "skyblue1")) +geom_smooth(method = lm, se=FALSE,linetype = "dashed", color = "black")+ theme_bw()  + facet_wrap(~day)
+
+plot6a
+
+plot6b <- ggplot(mytips, aes(total_bill, tip, color = sex, size=size))+geom_point() + xlab("Tip Amount") + ylab("Total Bill") + scale_x_log10(labels = dollar,breaks = seq(0, 50, 5)) + scale_y_continuous(labels = dollar,breaks = seq(0, 10, 2))+ scale_color_manual(name = "Gender", values = c("pink1", "skyblue1")) +geom_smooth(method = lm, se=FALSE,linetype = "dashed", color = "black")+ theme_bw()  + facet_grid(day~.)
+
+plot6b
 
 ```
 
