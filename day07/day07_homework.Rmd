@@ -1,0 +1,35 @@
+---
+title: "Day 7 Homework"
+output: html_document
+---
+
+Find three relationships in your data.  For each relationship, do the following:
+
+1. Verbally articulate the relationship you want to examine with a plot.
+
+2. Verbally identify what variables you want to map to each graphical dimension.
+
+3. Reshape your data as needed.
+
+```{r}
+
+```
+
+4. Use ggplot2 to create your graphs.
+
+```{r}
+
+```
+
+5. Fiddle with colors, axis labels, themes, etc. until the plot looks "publication ready" to you.  Try to change at least one thing per plot.
+
+```{r}
+
+```
+
+6. Save all plots to a format that you could use in a paper.  HINT: PNG works well for pasting into Word documents.
+
+```{r}
+
+```
+
