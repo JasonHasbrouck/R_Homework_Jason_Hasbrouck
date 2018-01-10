@@ -8,6 +8,8 @@ output: html_document
 ```{r}
 library(dplyr)
 library(tidyr)
+library(tidyverse)
+library(reshape2)
 library(readxl)
 terrorism <- read_excel("~/Desktop/R Homework/R_Homework_Jason_Hasbrouck/terrorism.xlsx")
 my.terrorism <- terrorism
@@ -34,18 +36,19 @@ attack.means
   
   
   
-#Logistic Regression:  
+#Linear Regression:  I am running a linear regression to see if attack type is a significant predictor of number of casualties in a terror attack.
 
-The estimate is `r round(estimate, 3)`, the standard error is `r round(std.error, 3)`, and the p-value is `r round(p.value, 3)`.
+The estimate is `r round( 0.899, 3)`, the standard error is `r round(2.215, 3)`, and the p-value is `r round(1.665e-11, 3)`.
 3
 
 
-#Correlation:
+#Correlation: I am running a correlation test to determine if number of casualties in a terror attack is related to type of terror attack.
+
+The correlation between number of casualties and type of terror attack is `round( 0.002214001 , 3)`, this is not a significant relationship  `t = round(0.50465, 3)`, `df = 51955`, and the p-value is `r round(0.6138, 3)`.
+
 ```{r}
 lm.results <- lm(mean~attacktype1b, data = attack.means)
 summary(lm.results)
-
-
 
 cor.test(my.terrorism$casualty,my.terrorism$attacktype1)
 
@@ -59,16 +62,18 @@ cor.test(my.terrorism$casualty,my.terrorism$attacktype1)
 my.terrorism$casualty <- as.numeric(my.terrorism$casualty)
 summary(my.terrorism$casualty)
 
-ggplot(data=my.terrorism, aes(x = nkill)) +geom_histogram(binwidth = .5)
+plot2a <- ggplot(data=my.terrorism, aes(x = nkill)) +geom_histogram(binwidth = .5)
 
-ggplot(data=my.terrorism, aes(x = nkill)) +geom_histogram(binwidth = 1)
+plot2b <- ggplot(data=my.terrorism, aes(x = nkill)) +geom_histogram(binwidth = 1)
 
-ggplot(data=my.terrorism, aes(x = nkill)) +geom_histogram(binwidth = 10)
+plot2c <- ggplot(data=my.terrorism, aes(x = nkill)) +geom_histogram(binwidth = 10)
 
 
-ggplot(data=my.terrorism, aes(x = nkill)) +geom_density(adjust = 1)
-ggplot(data=my.terrorism, aes(x = nkill)) +geom_density(adjust = 5)
-ggplot(data=my.terrorism, aes(x = nkill)) +geom_density(adjust = 500)
+plot2d <-ggplot(data=my.terrorism, aes(x = nkill)) +geom_density(adjust = 1)
+
+plot2e <-ggplot(data=my.terrorism, aes(x = nkill)) +geom_density(adjust = 5)
+
+plot2f <-ggplot(data=my.terrorism, aes(x = nkill)) +geom_density(adjust = 500)
 
 
 ```
@@ -79,14 +84,14 @@ ggplot(data=my.terrorism, aes(x = nkill)) +geom_density(adjust = 500)
 
 #Log Transform
 
-ggplot(data=my.terrorism, aes(log(x = nkill))) +geom_histogram(binwidth = 1)
+plot3a <- ggplot(data=my.terrorism, aes(log(x = nkill))) +geom_histogram(binwidth = 1)
 
-ggplot(data=my.terrorism, aes(log(x = nkill))) +geom_density(adjust = 1)
+plot3b <-ggplot(data=my.terrorism, aes(log(x = nkill))) +geom_density(adjust = 1)
 
 #Square Root Transform
-ggplot(data=my.terrorism, aes(sqrt(x = nkill))) +geom_histogram(binwidth = 1)
+plot3c <-ggplot(data=my.terrorism, aes(sqrt(x = nkill))) +geom_histogram(binwidth = 1)
 
-ggplot(data=my.terrorism, aes(sqrt(x = nkill))) +geom_density(adjust = 50)
+plot3d <-ggplot(data=my.terrorism, aes(sqrt(x = nkill))) +geom_density(adjust = 50)
 
 ```
 
@@ -97,13 +102,13 @@ ggplot(data=my.terrorism, aes(sqrt(x = nkill))) +geom_density(adjust = 50)
    - Plot the data as a boxplot, with the factor as `x` and the numerical variable as `y`  HINT: use geom_boxplot
 
 ```{r}
-ggplot(data=my.terrorism, aes(casualty, color=attacktype1b)) +geom_density()+coord_cartesian(x=c(0,15)) 
+plot4a <- ggplot(data=my.terrorism, aes(casualty, color=attacktype1b)) +geom_density()+coord_cartesian(x=c(0,15)) 
 
-ggplot(data=my.terrorism, aes(casualty, fill=attacktype1b)) +geom_density()+coord_cartesian(x=c(0,15)) 
+plot4b <-  ggplot(data=my.terrorism, aes(casualty, fill=attacktype1b)) +geom_density()+coord_cartesian(x=c(0,15)) 
 
-ggplot(data=my.terrorism, aes(casualty, linetype=attacktype1b)) +geom_density()+coord_cartesian(x=c(0,15)) 
+plot4c <- ggplot(data=my.terrorism, aes(casualty, linetype=attacktype1b)) +geom_density()+coord_cartesian(x=c(0,15)) 
 
-ggplot(data=my.terrorism, aes(attacktype1b, casualty)) +geom_boxplot() +coord_cartesian(y=c(0,35)) 
+plot4d <- ggplot(data=my.terrorism, aes(attacktype1b, casualty)) +geom_boxplot() +coord_cartesian(y=c(0,35)) 
 ```
 
 5. Create a bar plot of the cell means of some variable. Steps:
@@ -113,7 +118,9 @@ ggplot(data=my.terrorism, aes(attacktype1b, casualty)) +geom_boxplot() +coord_ca
    - HINT: use stat = "identity" in the geom_bar() function.
    
 ```{r}
-ggplot(data=attack.means, aes(attacktype1b, mean)) +geom_bar(stat="identity")
+plot5 <- ggplot(data=attack.means, aes(attacktype1b, mean)) +geom_bar(stat="identity")
+
+plot5
 
 
 ```
@@ -123,16 +130,48 @@ ggplot(data=attack.means, aes(attacktype1b, mean)) +geom_bar(stat="identity")
    - Use the "bar" geom, but map the two variables to different graphical dimension.  One should be the "x" value, but the other should be mapped to some other visual property.
 
 ```{r}
+?spread
+attack.wide <- spread(attack.means, iyear, mean)
+levels(attack.wide$attacktype1b) <- c("assassination", "armed.assault", "bombing.explosion", "hijacking", "hostage.barricade", "hostage.kidnapping", "facility.attack", "unarmed.assault", "unknown" )
+ 
+attack.wide.1 <- droplevels(attack.wide[attack.wide$attacktype1b == "bombing.explosion",  ])
+
+attack.wide.2 <- droplevels(attack.wide[attack.wide$attacktype1b == "armed.assault",  ])
+
+attack.3 <- rbind.data.frame(attack.wide.1, attack.wide.2)
 
 
+attack.type.year.means <- gather(attack.3, year, casualty, "2013":"2016")
+
+head(attack.type.year.means)
 
 
+plot6 <- ggplot(attack.type.year.means,(aes(attacktype1b, casualty, fill = year))) +geom_bar(stat="identity")
+
+plot6
 ```
 
 7. Output all of the plots above (from problems 1-6) as a single PDF.
 
 ```{r}
-
+pdf("all_the_plots.pdf")
+print(plot2a)
+print(plot2b)
+print(plot2c)
+print(plot2d)
+print(plot2e)
+print(plot2f)
+print(plot3a)
+print(plot3b)
+print(plot3c)
+print(plot3d)
+print(plot4a)
+print(plot4b)
+print(plot4c)
+print(plot4d)
+print(plot5)
+print(plot6)
+dev.off()
 ```
 
 8. Is there a better type of visualization for your data?  What numbers would you like to be able to visualize better?  Be as explicit as possible, and write some "pseudo-code" to ilustrate what you think you would like.
