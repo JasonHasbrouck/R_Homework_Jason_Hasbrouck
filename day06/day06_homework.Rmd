@@ -6,6 +6,24 @@ output: html_document
 0. Reload your data, and re-use the code you already have for getting things formatted nicely (columns renamed, factors relabeled, etc.)
 
 ```{r}
+library(dplyr)
+library(tidyr)
+library(readxl)
+terrorism <- read_excel("~/Desktop/R Homework/R_Homework_Jason_Hasbrouck/terrorism.xlsx")
+my.terrorism <- terrorism
+my.terrorism$iyear <- as.factor(my.terrorism$iyear)
+my.terrorism$imonth <- as.factor(my.terrorism$imonth)
+my.terrorism$attacktype1 <- as.numeric(my.terrorism$attacktype1)
+my.terrorism$attacktype1_txt <- as.factor(my.terrorism$attacktype1_txt)
+my.terrorism$attacktype1b <- my.terrorism$attacktype1
+levels(my.terrorism$attacktype1b) <- c("assassination", "armed.assault", "bombing.explosion", "hijacking", "hostage.barricade", "hostage.kidnapping", "facility.attack", "unarmed.assault", "unknown" )
+my.terrorism$attacktype1b <- as.factor(my.terrorism$attacktype1b)
+my.terrorism$attack.ID <- 1:nrow(my.terrorism)
+my.terrorism$casualty <- my.terrorism$nkill + my.terrorism$nwound
+
+attack.means <- summarize(group_by(my.terrorism, attacktype1b, iyear), mean = mean(casualty, na.rm = TRUE))
+attack.means
+
 
 ```
 
@@ -14,7 +32,22 @@ output: html_document
   - I won't judge you on statistical expertise!  (though I will make comments if I think I can be helpful)
   - Report some key statistics from the analysis, using **inline** code. HINT: outside of an R code chunk, use `r codehere` format.
   
+  
+  
+#Logistic Regression:  
+
+The estimate is `r round(estimate, 3)`, the standard error is `r round(std.error, 3)`, and the p-value is `r round(p.value, 3)`.
+3
+
+
+#Correlation:
 ```{r}
+lm.results <- lm(mean~attacktype1b, data = attack.means)
+summary(lm.results)
+
+
+
+cor.test(my.terrorism$casualty,my.terrorism$attacktype1)
 
 ```
 
@@ -23,12 +56,37 @@ output: html_document
    - Try some different values for `adjust` for the density plot.
 
 ```{r}
+my.terrorism$casualty <- as.numeric(my.terrorism$casualty)
+summary(my.terrorism$casualty)
+
+ggplot(data=my.terrorism, aes(x = nkill)) +geom_histogram(binwidth = .5)
+
+ggplot(data=my.terrorism, aes(x = nkill)) +geom_histogram(binwidth = 1)
+
+ggplot(data=my.terrorism, aes(x = nkill)) +geom_histogram(binwidth = 10)
+
+
+ggplot(data=my.terrorism, aes(x = nkill)) +geom_density(adjust = 1)
+ggplot(data=my.terrorism, aes(x = nkill)) +geom_density(adjust = 5)
+ggplot(data=my.terrorism, aes(x = nkill)) +geom_density(adjust = 500)
+
 
 ```
 
 3. How does the distribution look?  Try transforming the variable and try to get it to look more normal (i.e., more Gaussian).  If it already looks normal, do something to it to make it look non-normal.
 
 ```{r}
+
+#Log Transform
+
+ggplot(data=my.terrorism, aes(log(x = nkill))) +geom_histogram(binwidth = 1)
+
+ggplot(data=my.terrorism, aes(log(x = nkill))) +geom_density(adjust = 1)
+
+#Square Root Transform
+ggplot(data=my.terrorism, aes(sqrt(x = nkill))) +geom_histogram(binwidth = 1)
+
+ggplot(data=my.terrorism, aes(sqrt(x = nkill))) +geom_density(adjust = 50)
 
 ```
 
@@ -39,7 +97,13 @@ output: html_document
    - Plot the data as a boxplot, with the factor as `x` and the numerical variable as `y`  HINT: use geom_boxplot
 
 ```{r}
+ggplot(data=my.terrorism, aes(casualty, color=attacktype1b)) +geom_density()+coord_cartesian(x=c(0,15)) 
 
+ggplot(data=my.terrorism, aes(casualty, fill=attacktype1b)) +geom_density()+coord_cartesian(x=c(0,15)) 
+
+ggplot(data=my.terrorism, aes(casualty, linetype=attacktype1b)) +geom_density()+coord_cartesian(x=c(0,15)) 
+
+ggplot(data=my.terrorism, aes(attacktype1b, casualty)) +geom_boxplot() +coord_cartesian(y=c(0,35)) 
 ```
 
 5. Create a bar plot of the cell means of some variable. Steps:
@@ -49,6 +113,8 @@ output: html_document
    - HINT: use stat = "identity" in the geom_bar() function.
    
 ```{r}
+ggplot(data=attack.means, aes(attacktype1b, mean)) +geom_bar(stat="identity")
+
 
 ```
    
@@ -57,6 +123,9 @@ output: html_document
    - Use the "bar" geom, but map the two variables to different graphical dimension.  One should be the "x" value, but the other should be mapped to some other visual property.
 
 ```{r}
+
+
+
 
 ```
 
