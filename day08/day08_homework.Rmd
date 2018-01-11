@@ -14,3 +14,79 @@ For BOTH of these things, take the following steps:
 3. Work this code into a loop format, so that no copy & paste is neccesary.  You will need to set up a "counter" variable that cycles through various values (which do not have to be numeric), changing with every pass through the loop.  But you may also need to make other changes to your code to accommodate the loop.
 
 As usual, send me your .Rmd file with any data I need to replicate your results.
+
+#Data
+```{r}
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(tidyverse)
+library(reshape2)
+library(readxl)
+library(RColorBrewer)
+
+terrorism <- read_excel("terrorism.xlsx")
+my.terrorism <- terrorism
+
+my.terrorism$iyear <- as.factor(my.terrorism$iyear)
+my.terrorism$imonth <- as.factor(my.terrorism$imonth)
+my.terrorism$attacktype1 <- as.factor(my.terrorism$attacktype1)
+my.terrorism$attacktype1_txt <- as.factor(my.terrorism$attacktype1_txt)
+my.terrorism$weaptype1_txt <- as.factor(my.terrorism$weaptype1_txt)
+my.terrorism$attacktype1b <- my.terrorism$attacktype1
+levels(my.terrorism$attacktype1b) <- c("assassination", "armed.assault", "bombing.explosion", "hijacking", "hostage.barricade", "hostage.kidnapping", "facility.attack", "unarmed.assault", "unknown" )
+my.terrorism$attacktype1b <- as.factor(my.terrorism$attacktype1b)
+my.terrorism$attack.ID <- 1:nrow(my.terrorism)
+my.terrorism$casualty <- my.terrorism$nkill + my.terrorism$nwound
+my.terrorism$casualty <- as.numeric(my.terrorism$casualty)
+```
+
+#LOOP 1:
+
+##Create New Column that indicates the level of terrorist attack severity (low, medium, high)
+
+  - To do this I will create a loop that will create a new column and then code the variables as low, medium, and high depending on how many casualties there were. 
+  
+```{r}
+#COPY AND PASTE CODE EXAMPLE:
+
+non.loop <- my.terrorism
+non.loop$severity <- non.loop$casualty
+non.loop$severity <- ifelse(non.loop$severity < 5, "low", NA)
+
+#and so on for "medium" and "high"
+
+
+#LOOP CODE EXAMPLE
+
+loop1 <- my.terrorism
+
+loop1$attack.severity <- ifelse(loop1$casualty < 5, "low", ifelse(loop1$casualty > 20, "high",ifelse(loop1$casualty >= 5 & loop1$casualty <=20, "medium", NA)))
+
+```
+
+#LOOP 2
+
+## Create a loop of plots for severity of attacks by each year
+
+
+```{r}
+levels(my.terrorism$weaptype1_txt) <- c("Biological", "Chemical", "Explosives", "Fake Weapons", "Firearms", "Incendiary", "Melee", "Other", "Sabotage Equipment", "Unknown", "Vehicle")
+levels(my.terrorism$weaptype1_txt)
+
+ggplot(my.terrorism, aes(x = iyear, y = casualty, fill = weaptype1_txt))+geom_bar(stat = "identity", position = "dodge") +scale_y_log10(breaks = c(10, 50, 250, 500, 750, 1000, 1500)) +ggtitle("Annual Terrorist Attack Casualties by Weapon Type") +scale_fill_brewer(palette = "Spectral", name = "Weapon Type")+ theme(plot.title = element_text(hjust = 0.5))
+
+# Would then continue building above ggplot for each type of weapon individually, instead, I could use the following loop: 
+
+pdf("loop.plots.homework8.pdf")
+for(this.weapon in levels(my.terrorism$weaptype1_txt)) {
+print(ggplot(my.terrorism[my.terrorism$weaptype1_txt == this.weapon, ], aes(iyear,casualty)) + geom_bar(stat = "identity") + ggtitle(this.weapon))
+}
+dev.off()
+
+
+```
+for(this.weapon in levels(my.terrorism$weaptype1_txt)) {
+  print(ggplot(my.terrorism[my.terrorism$weaptype1_txt == this.weapon, ], aes(iyear,casualty)) + geom_bar(stat = "identity")) +scale_fill_brewer(palette = "Spectral")+ theme(plot.title = element_text(hjust = 0.5))
+}
+
