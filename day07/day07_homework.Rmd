@@ -20,7 +20,7 @@ library(reshape2)
 library(readxl)
 library(RColorBrewer)
 
-terrorism <- read_excel("~/Desktop/R Homework/R_Homework_Jason_Hasbrouck/terrorism.xlsx")
+terrorism <- read_excel("terrorism.xlsx")
 my.terrorism <- terrorism
 
 my.terrorism$iyear <- as.factor(my.terrorism$iyear)
