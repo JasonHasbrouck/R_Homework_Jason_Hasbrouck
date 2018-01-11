@@ -57,7 +57,7 @@ if(anyNA(x)) {
 
 ```{r} 
 x <- 4
-result <- ifelse(x > 3, "yay", "oh no!")
+result <- ifelse(test = x > 3,yes = "yay",no = "oh no!")
 result
 
 x <- 3
@@ -81,6 +81,8 @@ if(anyNA(x)) {
 # `for` loops
   - simple way to iterate through a set of code, via a "counter" variable
   - avoid re-writing code, when possible!
+  
+  
 
 ```{r}
 mydf <- data.frame(x = rnorm(n = 1000000, mean = 2, sd = 1), group = rep(1:1000, each = 1000))
@@ -97,6 +99,7 @@ this.vector <- mydf[mydf$group == 3, "x"]
 my.answer3 <- mean(this.vector)
 
 # MAKE IT A LOOP
+    
 
 for(my.counter in 1:10) {
   print(my.counter * 2)  
@@ -110,8 +113,9 @@ for(this.name in c("Ally", "Bob", "Carol")) {
   print(this.name)
 }
 
-# WARNING: you must create objects before you can subset them
-# my.answer <- vector()
+# WARNING: you must create objects before you can subset them#
+my.answer <- vector()
+
 for(this.group in c(1, 2, 3)) {
   this.vector <-  mydf$x[mydf$group == this.group]
   my.answer[this.group] <- mean(this.vector)  
@@ -166,6 +170,8 @@ library(MASS) # look out for "masking" of select() from dplyr
 
 cor.table <- matrix(c(1, .2, .2, 1), nrow = 2)
 cor.table
+
+            #mvnorm is multivariate norm
 some.data <- mvrnorm(n = 10, mu = c(1, 2), Sigma = cor.table, empirical = FALSE)
 some.data
 cor(some.data[, 1], some.data[, 2])
@@ -180,6 +186,7 @@ mu.sigmas
 
 data.sets <- list()
 length(data.sets) <- 5
+
 for(i in 1:length(data.sets)) {
   data.sets[[i]] <- as.data.frame(mvrnorm(n = 1000, mu = c(mu.sigmas[i, "mean1"], mu.sigmas[i, "mean2"]), Sigma = matrix(c(1, mu.sigmas[i, "corr"], mu.sigmas[i, "corr"], 1), ncol = 2)))
   data.sets[[i]]$set <- i
@@ -208,7 +215,7 @@ for(this.var in paste("a", 1:4, sep = "")) {
 
 ```{r}
 # set up the parameters of the simulation
-n.sim <- 10000
+n.sim <- 10000 
 sample.n <- 100
 correlation <- .2
 

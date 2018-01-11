@@ -7,6 +7,28 @@ output: html_document
 
 ```{r}
 
+x <- c(5:25)
+result <- ifelse(x < 15, "right", "wrong")
+
+if(result == "right") {
+  print("you win")
+} else if (result != "right") {
+  print ("wrong")
+} else {
+ print ("the result is inconclusive")  
+}
+
+
+my.string <- "hello"
+
+if(my.string == "right") {
+  print ("you win!")
+} else if (my.string == "wrong"){
+  print ("you lose!") 
+} else {
+  print ("the result is inconclusive")
+}
+
 ```
 
 2. Make a copy of the iris data. Use an ifelse statement to create a new column, where:
@@ -16,6 +38,11 @@ output: html_document
   - make a plot in ggplot2 to confirm that you did this right
   
 ```{r}
+my.iris <- iris
+
+my.iris$threshold <- ifelse(my.iris$Sepal.Length < 5, "low",
+        ifelse(my.iris$Sepal.Length > 6, "high", 
+        ifelse(my.iris$Sepal.Length >= 5 & my.iris$Sepal.Length <=6, "mid", NA)))
 
 ```
 
@@ -27,6 +54,18 @@ output: html_document
     - use pdf() and dev.off() so that the three plots get written out to a single file
     
 ```{r}
+library(ggplot2)
+
+scatter <- ggplot(my.iris, aes(Sepal.Length, Sepal.Width)) + geom_point() +facet_wrap(~Species)
+scatter
+
+ggplot(my.iris[my.iris$Species == "setosa", ], aes(Sepal.Length, Sepal.Width)) + geom_point() +ggtitle("setosa")
+
+pdf("loop_plots.pdf")
+for(this.species in levels(my.iris$Species)){
+  print(ggplot(my.iris[my.iris$Species == this.species, ], aes(Sepal.Length, Sepal.Width)) + geom_point() +ggtitle(this.species))
+}
+dev.off()
 
 ```
 
