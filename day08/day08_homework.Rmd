@@ -86,7 +86,4 @@ dev.off()
 
 
 ```
-for(this.weapon in levels(my.terrorism$weaptype1_txt)) {
-  print(ggplot(my.terrorism[my.terrorism$weaptype1_txt == this.weapon, ], aes(iyear,casualty)) + geom_bar(stat = "identity")) +scale_fill_brewer(palette = "Spectral")+ theme(plot.title = element_text(hjust = 0.5))
-}
 
