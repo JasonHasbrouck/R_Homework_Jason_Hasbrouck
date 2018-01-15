@@ -1,0 +1,658 @@
+---
+title: "Day 9 Lecture"
+output: html_document
+---
+
+# Outline
+  - Review homework and loops
+  - Writing functions (basics)
+  - Vectorization
+  - Writing functions (more)
+
+# Loop review & practice
+
+```{r}
+scottdata <- read.csv("scottdata/CognitionPaperFinalData.csv")
+head(scottdata)
+colnames(scottdata)
+
+# standardize every "entropy" column using scale()
+
+# without a loop
+# scottdata$AllEntropy <- as.numeric(scale(scottdata$AllEntropy))
+
+# with a loop
+
+```
+
+```{r}
+# use a loop to get several regression results, one for each species
+my.iris <- iris
+
+# "by hand", without a loop
+lm.setosa <- lm(Sepal.Width ~ Sepal.Length, data = my.iris[my.iris$Species == "setosa", ])
+lm.versicolor <- lm(Sepal.Width ~ Sepal.Length, data = my.iris[my.iris$Species == "versicolor", ])
+lm.virginica <- lm(Sepal.Width ~ Sepal.Length, data = my.iris[my.iris$Species == "virginica", ])
+
+# with a loop
+
+```
+
+```{r}
+# get() function
+x <- 1:10
+"x"
+x
+get("x")
+
+t.test(myris.wide$Width, myris.wide$Length)
+
+get("t.test")(myris.wide$Width, myris.wide$Length)
+
+tests.I.want <- c("t.test", "cor.test", "wilcox.test")
+
+get(tests.I.want[3])(myris.wide$Width, myris.wide$Length)
+```
+
+# Some weird counters in loops
+
+```{r}
+for(counter in list(iris$Sepal.Length, iris$Sepal.Width, iris$Petal.Length, iris$Petal.Width)) {
+#  print(counter)
+  print(length(counter))
+  print(mean(counter))
+}
+
+for(column.name in colnames(iris)[1:4]) {
+  print(mean(iris[, column.name]))
+}
+
+for(counter in 1:1000) { # pretend that counter == 843 is bad, we want to skip it
+  if(counter %in% c(843)) {
+    
+  } else {
+    # whole code block here 
+  }
+}
+
+```
+
+# "Debugging" tips for for-loops
+
+  - if you get an error, the counter variable is at the value when things broke
+  - insert `print()` statements to check on things mid-loop
+  - manually set the counter variable value, step through the loop
+
+# Functions
+  - making a function
+  - anonymous functions
+  - environments
+  - making functions available
+  - debugging
+
+## Function basics
+  - basic syntax very simple!
+
+```{r eval = FALSE}
+my.function <- function(arg1, arg2, ...) {
+  #FUNCTION BODY  
+}
+
+```
+
+## Simple example
+  
+```{r}
+library(reshape2)
+library(dplyr)
+library(tidyr)
+mysleep <- sleep
+levels(mysleep$group) <- c("pre", "post")
+mysleep.wide <- spread(mysleep, group, extra)
+mysleep.wide
+
+double.max <- function(arg1) {
+  output <- max(arg1) * 2  
+  output
+}
+
+double.max(3)
+
+double.max(1:10)
+
+double.max(c(3, 24, 8))
+
+objects()
+
+double.max
+```
+
+# Vectorization overview
+  - sometimes faster (not always)
+  - sometimes easier to think about (not always)
+  - split-apply-combine
+  - "anonymous" functions = "one-use" functions
+
+```{r}
+x <- 1:10
+
+x * 3
+```
+
+# The `apply` family
+
+## `apply`
+
+- good for "row-wise" operations over data frames (or column-wise)
+- give it only the columns/rows you want to operate on
+- the `MARGIN` argument says whether it's row-wise (=1) or column-wise (=2)
+- the `FUN` argument says what to do with each row/column-wise vector
+
+```{r}
+minpair <- read.csv("scottdata/CognitionPaperFinalData.csv")
+head(minpair)
+colnames(minpair)
+# head(minpair[, 10:17])
+minpair$allmean <- apply(minpair[, 10:17], MARGIN = 1, FUN = mean, na.rm = TRUE)
+head(minpair)
+
+double.max(1:10)
+
+mysleep.wide
+mysleep.wide$newcol <- apply(mysleep.wide[, 2:3], 1, double.max)
+mysleep.wide
+
+# anonymous
+mysleep.wide$newcol2 <- apply(mysleep.wide[, 2:3], 1, function(x) { max(x) * 2 })
+mysleep.wide
+
+mysleep.wide$gains <- apply(mysleep.wide[, 2:3], 1, function(whatever) { whatever[2] - whatever[1] })
+mysleep.wide
+
+apply(mysleep.wide[, 2:3], 2, function(this.col) { this.col[2] - this.col[1] })
+
+apply(mysleep.wide[, 2:3], 2, mean)
+
+apply(mysleep.wide[, 2:3], 2, function(x) x*2)
+
+mysleep.wide$gains.weird <- apply(mysleep.wide[, 2:3], 1, function(y, z) { y[2] - z[1] })
+mysleep.wide
+
+my.z <- 2
+mysleep.wide$gains.weird <- apply(mysleep.wide[, 2:3], 1, function(y, z) { y[2] - z }, z = 2)
+mysleep.wide
+
+mysleep.wide$post[c(3, 5, 7)] <- NA
+
+mysleep.wide
+apply(mysleep.wide[, 2:3], 1, mean, na.rm = TRUE)
+
+```
+
+## other members of the `apply` family
+  - generally avoid, if possible!
+
+### `lapply`
+  - "list" apply
+  - does something to each member of a list/vector
+  - returns a list
+
+### `tapply`
+  - "table" apply
+  - does something to data in "cells" by a combination of factors
+  - returns a table
+
+### `sapply`
+  - "simple" apply
+  - returns a vector
+  - usually what you want instead of `lapply`
+
+# More general solutions: `plyr` and `dplyr`
+  - best for data frames
+  
+## `plyr`
+  - the `plyr` package is older, slower, not under very active development
+  - instantiates a "split-apply-combine" philosophy
+  - handy paper here: http://www.jstatsoft.org/v40/i01
+  - series of related functions
+    - XYply, where X = "thing you give it" and Y = "thing it gives you back"
+    - `ldply()` = you give it a list, it gives you back a data frame
+    - `daply()` = you give it a data frame, it gives you back an array
+    - etc.
+
+```{r eval = FALSE}
+# library(plyr)
+my.function <- (chunk)
+
+results <- ddply(mydata, c("factor1", "factor1"), my.function)
+
+```
+
+## `dplyr`
+  - the most common usage for `plyr` is `ddply()` -- give it a data frame and get a data frame back
+  - the `dplyr` package takes this and runs with it
+  - DON'T library both packages in the same session (unless you really need to and know what you're doing)
+  - `dplyr` is implemented to be much faster
+  - `dplyr` has rapidly taken over from `plyr`
+  
+### `dplyr` usage
+  
+  - "verbs": `mutate`, `filter`, `select`, `summarise` (or `summarize`), `arrange`
+  - use `group_by()` to set the groups over which something (like `summarize` will apply)
+  - `mutate` = "transform"
+  - `filter` = "get some of the rows"
+  - `select` = "get some of the columns"
+  - `summarize` = boil things down to some kind of summary
+  - `do` = general purpose!
+
+### reviewing `summarize()`
+
+```{r}
+mysleep <- sleep
+mysleep.means <- group_by(mysleep, group) %>% summarize(mean = mean(extra), sd = sd(extra))
+mysleep.means
+summarize(mysleep, mean = mean(extra), sd = sd(extra))
+
+```
+
+### `mutate()` and `rowwise()`
+
+```{r}
+mysleep$new <- mysleep$extra * 3
+head(mysleep)
+double.max(mysleep.wide$pre)
+
+mysleep.wide <- mutate(mysleep.wide, newcol3 = double.max(c(pre, post)))
+
+mysleep.wide <- 
+  mysleep.wide %>%
+  rowwise() %>%
+  mutate(newcol3 = double.max(c(pre, post))) # or newcol3 = max(pre, post) * 2
+mysleep.wide
+
+# dplyr with reshaping
+mysleep.wide %>%
+  gather(condition, extra.sleep, pre:post) %>%
+  group_by(ID) %>%
+  mutate(newcol4 = double.max(extra.sleep)) %>%
+  spread(condition, extra.sleep)
+
+```
+
+### example of `do()` vs. a loop
+  
+```{r}
+# using the iris data, write code to:
+# - run a t.test, and 
+# - pull out the t, df, and p-value into a (one-row) data frame
+
+
+# write the code to do the same thing, once for "setosa" and once for "versicolor"
+
+
+# write a loop to go through all levels of Species
+
+# write a function that will return the one-row data frame of results
+
+# run the function on the overall iris data
+
+# use group_by() and do() to get the results separately for each level of Species
+
+```
+
+# Retrospective construction of the function
+
+```{r eval = FALSE}
+# start with the results I want
+my.ttest.results <- data.frame(mean1 = this.mean1, mean2 = this.mean2, t = this.t, df = this.df, p = this.pval)
+
+# how do I get those?
+this.mean1 <- this.ttest$estimate[1]
+this.mean2 <- this.ttest$estimate[2]
+this.t <- this.ttest$statistic
+this.df <- this.ttest$parameter
+this.pval <- this.ttest$p.value
+
+# where do I get the t-test?
+this.ttest <- t.test(data[[var1]], data[[var2]])
+
+# example: get it to run ONCE
+this.ttest <- t.test(mydata$conditionA, mydata$conditionB)
+this.mean1 <- this.ttest$estimate[1]
+this.mean2 <- this.ttest$estimate[2]
+this.t <- this.ttest$statistic
+this.df <- this.ttest$parameter
+this.pval <- this.ttest$p.value
+my.ttest.results <- data.frame(mean1 = this.mean1, mean2 = this.mean2, t = this.t, df = this.df, p = this.pval)
+
+my.ttest.results
+
+# functionizing: make things abstract, pull out constants
+# new.function <- function(v1, v2) {
+# 
+# ...
+
+# new.function <- function(data) {
+#  this.ttest <- t.test(data$conditionA, data$conditionB)
+  
+final.version <- function(data, vars) {
+  this.ttest <- t.test(data[[vars[1]]], data[[vars[2]]])
+  
+```
+
+
+# More examples
+
+```{r}
+myris <- iris
+myris$plantID <- 1:nrow(myris)
+myris <- gather(myris, myvariable, cm, 1:4)
+myris <- separate(myris, myvariable, c("part", "dimension"), sep = "\\.")
+myris$part <- as.factor(myris$part)
+myris$dimension <- as.factor(myris$dimension)
+
+head(myris)
+
+# how many times now have we done this?
+# why not make this a function?
+clean.iris <- function(iris = iris) {
+  library(tidyr)
+  myris <- iris
+  myris$plantID <- 1:nrow(myris)
+  myris <- gather(myris, myvariable, cm, 1:4)
+  myris <- separate(myris, myvariable, c("part", "dimension"), sep = "\\.")
+  myris$part <- as.factor(myris$part)
+  myris$dimension <- as.factor(myris$dimension)
+  myris
+}
+
+myris2 <- clean.iris(iris)
+identical(myris, myris2)
+```
+
+```{r}
+# run a regression 
+# extract the estimate, p-value, and adjusted r-squared
+
+# loop version
+
+
+# dplyr do() version
+
+
+
+```
+
+
+# More stuff on functions
+
+## Environments
+  - R can look "up" through environments, but not "down"
+  - the body of a function is an environment, nested under the environment where it is called
+
+```{r}
+
+# remember that R can look "up" into environments
+arg1 <- 40:45
+
+bad.double.max <- function(x) { # not a good idea
+  output <- max(arg1) * 2  
+  output
+}
+
+bad.double.max(y)
+
+double.max <- function(x) {
+  max(x) * 2  # ok, because it's a value
+}
+
+bad.double.max2 <- function(x) {
+  output <- max(x) * 2  # not returning a value
+}
+
+#double.max <- function(x) { max(x) * 2 }
+#double.max <- function(x) max(x) * 2 
+
+
+double.max <- function(x) {
+  output <- max(x) * 2  
+  print(environment())
+  print(objects())
+  cat("\nThis is an awesome function\n")
+  print(output)
+  return(NULL)
+}
+
+x <- double.max(1:10)
+x
+
+double.max <- function(x) {
+  output <- max(x) * 2
+  y <- 6
+  output
+}
+
+y
+
+evil.double.max <- function(x) {
+  output <- max(x) * 2
+  y <<- 6
+  output
+}
+
+rm(y)
+set.seed(42)
+x <- evil.double.max(rnorm(20))
+x
+y
+
+```
+
+
+## Making functions available
+  - in the notebook/script
+  - `source()`
+    - runs all code in another file
+
+```{r}
+# source("day9/anotherfunction.R")
+```
+
+  - package!
+    - some package-making tutorials:
+      - http://hilaryparker.com/2014/04/29/writing-an-r-package-from-scratch/
+      - http://r-pkgs.had.co.nz/
+      - https://support.rstudio.com/hc/en-us/articles/200486488-Developing-Packages-with-RStudio
+      - http://cran.r-project.org/doc/contrib/Leisch-CreatingPackages.pdf
+      - and lots more
+
+## Debugging
+  - run as a non-function
+  - insert "test" code
+  - use `browser()`, `debug()`, and `undebug()`
+  
+```{r}
+my.analysis <- function() {
+  library(dplyr)
+  if(require(mice)) {
+    print("run mice code")
+  } else {
+    print("run some alternative code")
+  }   
+}
+
+my.analysis2 <- function() {
+  library(dplyr)
+  if(library(mice)) {  # throws an error
+    print("run mice code")
+  } else {
+    print("run some alternative code")
+  }   
+}
+
+
+mysleep <- sleep
+
+my.pvals.v1 <- function(data) {
+  test.results <- t.test(extra ~ group, data = data, paired = TRUE)
+  pval <- test.results$p.value
+  if (pval < .05) {
+    output <- "p < .05, significant, thank god"
+  } else {
+    output <- paste("dammit, p is =", round(pval, 3))
+  }
+  output
+}
+
+my.pvals.v1(mysleep)
+mysleep2 <- mysleep[-c(3, 17), ]
+my.pvals.v1(mysleep2)
+mysleep3 <- mysleep
+colnames(mysleep3) <- c("time.sleep", "condition", "subject")
+my.pvals.v1(mysleep3)
+```
+
+```{r eval=FALSE}
+my.pvals.v2 <- function(data, DV, factor) {
+  test.results <- t.test(DV ~ factor, data = data, paired = paired)
+  pval <- test.results$p.value
+  if (pval < .05) {
+    output <- "p < .05, significant, thank god"
+  } else {
+    output <- paste("dammit, p is =", round(pval, 3))
+  }
+  output
+}
+
+my.pvals.v2(mysleep3, DV = "time.sleep", factor = "condition") # this will break!
+
+```
+
+### "fake function" debugging
+
+```{r}
+my.pvals.v2(mysleep3, DV = "time.sleep", factor = "condition")
+
+my.pvals.v2 <- function(data, DV, factor) {
+  
+  data <- mysleep3
+  DV <- "time.sleep"
+  factor <- "condition"
+  
+  test.results <- t.test(DV ~ factor, data = data)
+  pval <- test.results$p.value
+  if (pval < .05) {
+    output <- "p < .05, significant, thank god"
+  } else {
+    output <- paste("dammit, p is =", round(pval, 3))
+  }
+  output
+  
+  
+  
+}
+
+
+
+```
+
+### insert "print" statements
+
+```{r}
+my.pvals.v2(mysleep3, DV = "time.sleep", factor = "condition")
+
+my.pvals.v2 <- function(data, DV, factor) {
+  print(DV)
+  test.results <- t.test(DV ~ factor, data = data)
+  pval <- test.results$p.value
+  if (pval < .05) {
+    output <- "p < .05, significant, thank god"
+  } else {
+    output <- paste("dammit, p is =", round(pval, 3))
+  }
+  output
+  
+  
+  
+}
+
+
+```
+
+### with debugging utilities
+  - `browser()`
+  - `debug()`, `undebug()`
+
+```{r}
+my.pvals.v2(mysleep3, DV = "time.sleep", factor = "condition")
+
+my.pvals.v2 <- function(data, DV, factor) {
+  #browser()
+  test.results <- t.test(DV ~ factor, data = data)
+  pval <- test.results$p.value
+  if (pval < .05) {
+    output <- "p < .05, significant, thank god"
+  } else {
+    output <- paste("dammit, p is =", round(pval, 3))
+  }
+  output  
+}
+
+debug(my.pvals.v2)
+undebug(my.pvals.v2)
+
+my.pvals.v3 <- function(data, my.formula) {
+  #browser()
+  test.results <- t.test(my.formula, data = data)
+  pval <- test.results$p.value
+  if (pval < .05) {
+    output <- "p < .05, significant, thank god"
+  } else {
+    output <- paste("dammit, p is =", round(pval, 3))
+  }
+  output  
+}
+
+my.pvals.v3(mysleep3, time.sleep ~ condition)
+
+my.pvals.v4 <- function(data, DV, factor) {
+  formula.string <- paste(DV, "~", factor)
+  my.formula <- as.formula(formula.string)
+  test.results <- t.test(my.formula, data = data)
+  pval <- test.results$p.value
+  if (pval < .05) {
+    output <- "p < .05, significant, thank god"
+  } else {
+    output <- paste("dammit, p is =", round(pval, 3))
+  }
+  output  
+}
+
+my.pvals.v4(mysleep3, DV = "time.sleep", factor = "condition")
+
+
+```
+
+### dealing with user error
+
+``` {r}
+my.pvals.v4 <- function(data, DV, factor) {
+  if(!is.data.frame(data)) {
+    stop("Please supply a data frame, dear user") # can use warning() as well, does not throw error
+  }
+  formula.string <- paste(DV, "~", factor)
+  my.formula <- as.formula(formula.string)
+  test.results <- t.test(my.formula, data = data)
+  pval <- test.results$p.value
+  if (pval < .05) {
+    output <- "p < .05, significant, thank god"
+  } else {
+    output <- paste("dammit, p is =", round(pval, 3))
+  }
+  output  
+}
+
+my.pvals.v4(as.matrix(mysleep3), DV = "time.sleep", factor = "condition")
+
+
+```

@@ -1,0 +1,30 @@
+---
+title: "Day 9 Practice"
+output: html_document
+---
+
+1. Create a function to compute standard error of a mean.  The formula is to take the standard deviation of a set of observations (i.e., numbers), divided by the square root of N, where N is the number of observations. Try this out on a few samples
+
+```{r}
+
+```
+
+2. Create another function, which takes a four-member vector as its argument. The function should:
+  - get the square root of the sum of the first two members, the square root of the sum of the second two members, and then take the mean of the two square roots
+  - use `apply()` to apply this function across the rows of observations in the `iris` data set, and put that result in a new column
+  - use `dplyr` `rowwise()` and `mutate()` to get the same result
+  
+```{r}
+
+```
+
+3. Make another copy of the iris data set.
+  - Use `group_by` and `summarize` to get the mean, standard deviation, and N (`length()`) of Sepal.Width for each of the species.
+  - Use `mutate` and the standard error function from #1 to create a column in this summary table that gives the standard error
+  - Use the `%>%` operator to do all of these things at once
+
+```{r}
+
+
+```
+

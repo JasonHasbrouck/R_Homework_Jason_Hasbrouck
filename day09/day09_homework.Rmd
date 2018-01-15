@@ -1,0 +1,85 @@
+---
+title: "Day 9 Homework"
+output: html_document
+---
+
+0. Tell me about something you want to either review, or something new to cover.
+  - dplyr (merging, splitting, gathering data)
+  - functions (a basic recap with some practice)
+  - loops (basic recap of how to set them up)
+  - vectorization (what is the difference between vecotrization and functions/loops?)
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(tidyverse)
+library(reshape2)
+library(readxl)
+library(RColorBrewer)
+
+terrorism <- read_excel("terrorism.xlsx")
+my.terrorism <- terrorism
+
+my.terrorism$iyear <- as.factor(my.terrorism$iyear)
+my.terrorism$imonth <- as.factor(my.terrorism$imonth)
+my.terrorism$attacktype1 <- as.factor(my.terrorism$attacktype1)
+my.terrorism$attacktype1_txt <- as.factor(my.terrorism$attacktype1_txt)
+my.terrorism$weaptype1_txt <- as.factor(my.terrorism$weaptype1_txt)
+my.terrorism$attacktype1b <- my.terrorism$attacktype1
+levels(my.terrorism$attacktype1b) <- c("assassination", "armed.assault", "bombing.explosion", "hijacking", "hostage.barricade", "hostage.kidnapping", "facility.attack", "unarmed.assault", "unknown" )
+my.terrorism$attacktype1b <- as.factor(my.terrorism$attacktype1b)
+my.terrorism$attack.ID <- 1:nrow(my.terrorism)
+my.terrorism$casualty <- my.terrorism$nkill + my.terrorism$nwound
+my.terrorism$casualty <- as.numeric(my.terrorism$casualty)
+```
+
+
+
+1. Use the `apply()` function to get the mean of several numerical columns, row-wise.  For example, imagine that you have three columns of numbers, and that you want to get the mean value for each row across the columns.  Use `apply()` to get this result and put it into a new column of your data frame.
+
+```{r}
+
+colnames(my.terrorism)
+
+my.terrorism$casualty.mean <- apply(my.terrorism[,15:16], MARGIN = 1, FUN = mean, na.rm = TRUE)
+
+```
+
+2. Write a small function. It can do something very, very simple.  It needs to have at least one argument.  Describe what you want it to do, write the function, and then use it on a few different cases.
+
+```{r}
+
+#This fuction will multiply the lowest number in a group by 5
+multiply.by.5 <- function(arg1) {
+  output <- min(arg1) * 5
+  output
+}
+
+multiply.by.5 (10)
+
+multiply.by.5 (c(50:234))
+
+
+```
+
+3. Go back to the two things you tried to use loops for in Day 8 Homework.  Pick ONE of these things to try to "vectorize."  If you decide that something else would work better, describe some new thing you're trying to do that could be accomplished with a loop. Depending on what you were doing, this may use the `apply()` function, or the combination of `group_by()` and `do()`.  Either of these methods will likely require you to write a function first.  
+
+So first, create a function that will accomplish what you want *one* time.  Then use one of the "vectorizing" functions to apply your new function in an iterative way.  If you want your function to be applied to each row in your data frame, use `apply()` (or `rowwise()` and `mutate()`).  Otherwise, use `group_by()` to specify how to "break up" your date into "chunks", and pass your function to `do()` in order to apply your function to each chunk.
+
+Note that if you use `do()` and your function returns a data frame, the results will be a data frame.  But if you instead return some other object (like a ggplot object, or a regression object or a t-test object or something like that), then the result will be a list containing those objects.
+
+```{r}
+##Create New Column that indicates the level of terrorist attack severity (low, medium, high)
+
+severity <- function(arg1) {
+  output <- ifelse(my.terrorism$casualty < 5, "low", ifelse(my.terrorism$casualty > 20, "high",ifelse(my.terrorism$casualty >= 5 & my.terrorism$casualty <=20, "medium", NA)))
+}
+    
+my.terrorism$severity <- apply((severity), MARGIN = 2, FUN = NA)
+
+#I am not quite sure which vecorization tool to use to get this data pasted into a new column. Can we go over this in class?
+
+?sapply
+```
+
