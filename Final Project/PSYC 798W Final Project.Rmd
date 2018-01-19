@@ -1,0 +1,136 @@
+---
+title: "PSYC 798W Final Project"
+author: "Jason Hasbrouck"
+date: "1/18/2018"
+output: html_document
+---
+
+For my final project I will use the terrorism data set to answer the following questions: 
+
+1) Is there a difference in severity of attacks between years?
+
+2) Is there a difference in severity of attacks based on month of year?
+
+3) Which region of the world has largest volume of terror attacks?
+
+4) What types of attacks lead to the most fatalities?
+
+5) What types of attacks lead to the most injuries?
+
+For questions 1 and 2, I will run a correlation test to determine the relationships between severity in attacks based on months and on years.Then I will use bootstrapping by creating my own loops in order to compare the results from the cor.test and the results from bootstrapping for the 95% confidence intervals. 
+
+Then for  questions 3 - 5, I will use either multiple regressions,  ANOVAs, or BAYES Factors to answer the questions. I will provide plots to display my findings for each question. 
+
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(tidyverse)
+library(reshape2)
+library(psych)
+library(BayesFactor)
+library(readxl)
+library(RColorBrewer)
+
+terrorism <- read_excel("terrorism.xlsx")
+my.terrorism <- terrorism
+
+my.terrorism$iyear <- as.factor(my.terrorism$iyear)
+my.terrorism$imonth <- as.numeric(my.terrorism$imonth)
+my.terrorism$attacktype1 <- as.numeric(my.terrorism$attacktype1)
+my.terrorism$attacktype1_txt <- as.factor(my.terrorism$attacktype1_txt)
+
+my.terrorism$weaptype1_txt <- as.factor(my.terrorism$weaptype1_txt)
+
+
+my.terrorism$attacktype1b <- my.terrorism$attacktype1
+levels(my.terrorism$attacktype1b) <- c("assassination", "armed.assault", "bombing.explosion", "hijacking", "hostage.barricade", "hostage.kidnapping", "facility.attack", "unarmed.assault", "unknown" )
+my.terrorism$attacktype1b <- as.factor(my.terrorism$attacktype1b)
+my.terrorism$attack.ID <- 1:nrow(my.terrorism)
+my.terrorism$casualty <- my.terrorism$nkill + my.terrorism$nwound
+my.terrorism$casualty <- as.numeric(my.terrorism$casualty)
+
+
+?spread
+ID.wide <- spread(my.terrorism, iyear, attack.ID, convert = TRUE)
+
+attack.means <- summarize(group_by(my.terrorism, attacktype1b, iyear), mean = mean(casualty, na.rm = TRUE))
+attack.means
+
+```
+
+#1: Is there a difference in severity of attacks between years?
+
+The results  show a significant differerence in severity of attacks for the following years: 
+
+- 2013 & 2014: t = 2.6974, df = 24734, p-value = 0.006992
+
+- 2013 & 2015: t = -2.0415, df = 24627, p-value = 0.04122
+
+- 2013 & 2016: t = -2.3923, df = 20688, p-value = 0.01675
+
+- 2014 & 2015: t = -4.8378, df = 27336, p-value = 1.32e-06
+
+- 2014 & 2016: t = -4.4859, df = 19821, p-value = 7.301e-06
+ 
+
+```{r}
+
+attack.2013 <- droplevels(my.terrorism[my.terrorism$iyear == "2013",  ])
+
+attack.2014 <- droplevels(my.terrorism[my.terrorism$iyear == "2014",  ])
+
+attack.2015 <- droplevels(my.terrorism[my.terrorism$iyear == "2015",  ])
+
+attack.2016 <- droplevels(my.terrorism[my.terrorism$iyear == "2016",  ])
+
+
+t.test(attack.2013$casualty, attack.2014$casualty)
+
+t.test(attack.2013$casualty, attack.2015$casualty)
+
+t.test(attack.2013$casualty, attack.2016$casualty)
+
+t.test(attack.2014$casualty, attack.2015$casualty)
+
+t.test(attack.2014$casualty, attack.2016$casualty)
+
+t.test(attack.2015$casualty, attack.2016$casualty)
+
+ggplot(my.terrorism, aes(iyear, casualty))+geom_boxplot() +scale_y_log10(breaks = c(0, 2,4,6,8,100,500, 1000,1500))+ylab("Casualty per Attack")+xlab("Year")+ggtitle("Casualties Per Terrorist Attack")+ theme(plot.title = element_text(hjust = 0.5))
+```
+
+
+#2 Is there a difference in severity of attacks based on month of year?
+
+```{r}
+
+```
+
+
+#3 Which region of the world has largest volume of terror attacks?
+
+```{r}
+
+```
+
+#4 What types of attacks lead to the most fatalities?
+
+```{r}
+
+```
+
+#5 What types of attacks lead to the most injuries?
+
+```{r}
+
+plot(my.terrorism$nkill ~ my.terrorism$attacktype1_txt)
+
+lm.injury <- lm(nkill ~ attacktype1_txt, data = my.terrorism)
+
+summary(lm.injury)
+
+
+```
+

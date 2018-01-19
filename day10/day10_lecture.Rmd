@@ -1,0 +1,425 @@
+---
+title: "Day 10 lecture/review"
+output: html_document
+---
+
+# Template for working with new functions
+
+## Some steps
+  1. Find the function/package you want
+    - Google
+    - People you know
+    - TaskViews: R home page > link on the left for Packages > link for CRAN Task Views
+    - Papers (contact authors if necessary)
+  2. If you find a package:
+    - Look at the CRAN page
+      - Google: "CRAN <packagename>"
+      - website links (URL)
+      - vignettes
+  3. When you find a function
+    1. go to the help page (`?<functionname>`)
+    2. what are the required arguments?
+      - in Usage
+      - what arguments have defaults? what are those defaults?
+    3. what kinds of things can go in the required arguments?
+      - type of object: look in Arguments
+      - format
+      - `example()`
+    4. try it!
+    5. inspect the structure of the resulting object
+    6. troubleshoot
+    
+## Example: factor analysis
+
+1. Google around: decide on `factanal()` (also `principal()` from the `psych` package, or the various functions in the `lavaan()` package)
+2. Already in `stats` package
+3. `?factanal`
+4. Required arguments:
+  - `x`
+  - `factors`
+  
+```{r}
+myris <- iris
+myris.fa1 <- factanal(x = ~ Sepal.Length + Sepal.Width + Petal.Length + Petal.Width, data = myris, factors = 1)
+myris.fa2 <- factanal(x = myris[, c("Sepal.Length", "Sepal.Width", "Petal.Length", "Petal.Width")], factors = 1)
+
+myris.fa1 # same as print(myris.fa1)
+myris.fa2
+names(myris.fa1)
+str(myris.fa1)
+class(myris.fa1)
+
+# help() : Value
+```
+
+  - reminder: 
+    - ERRORS mean "I give up, there's a problem"
+    - WARNINGS mean "you might not want to do that (but I did it anyway)"
+  - inspect the structure of the resulting object
+    - `print()` (same as just typing name of object + Enter)
+    - `names()`
+    - `str()`
+    - look at the Value part of the help file
+  - browse through optional arguments
+
+
+# Template for loops (or vectorization)
+
+Example:
+  - We want a regression
+  - estimate, std err, p-value
+  - scatterplot with regression line
+  - for each species separately
+
+1. DO IT ONCE!
+  - do whatever you want to do, on just one chunk of your data (or whatever it is that you want to iterate through)
+
+```{r}
+library(ggplot2)
+myris <- iris
+
+myris.subset <- myris[myris$Species == "setosa", ] # or filter(myris, Species == "setosa")
+
+#run regression
+myris.lm <- lm(Sepal.Width ~ Sepal.Length, data = myris.subset) 
+
+#pull out values
+coefs <- summary(myris.lm)$coefficients
+est <- coefs["Sepal.Length", "Estimate"]
+std.error <- coefs["Sepal.Length", "Std. Error"]
+pval <- coefs["Sepal.Length", "Pr(>|t|)"]
+
+#build a plot
+ggplot(myris.subset, aes(Sepal.Length, Sepal.Width)) + geom_point() + geom_smooth(method = "lm")
+
+```
+
+2. Figure out what MINIMALLY needs to change for each pass through a loop
+  - try a copy & paste, get it to work for the next thing
+  - the species
+  - THAT minimal thing is what you want the counter to loop through (or index)
+  
+```{r}
+myris <- iris
+
+
+#Species type "virginica" is the one thing that we want to change for our loop
+myris.subset <- myris[myris$Species == "virginica", ] # or filter(myris, Species == "virginica")
+
+myris.lm <- lm(Sepal.Width ~ Sepal.Length, data = myris.subset) 
+coefs <- summary(myris.lm)$coefficients
+est <- coefs["Sepal.Length", "Estimate"]
+std.error <- coefs["Sepal.Length", "Std. Error"]
+pval <- coefs["Sepal.Length", "Pr(>|t|)"]
+
+ggplot(myris.subset, aes(Sepal.Length, Sepal.Width)) + geom_point() + geom_smooth(method = "lm")
+
+```
+
+3. Modify to fit the loop structure
+  - figure out how to get all the counter values in a vector
+  - `for(COUNTER in COUNTER.VECTOR) { }`
+  - set up "results storage" object
+    - list
+    - data.frame
+    - etc.
+    - check to make sure it looks like what you want
+  - how do I get the values produced in each loop?
+    - think about the merits of string vector "counter" vs. a numeric one
+    
+```{r}
+#for(this.species in c("setosa", "virginica", "versicolor")) {
+#for(this.species in levels(myris$Species)) {
+#for(this.species in unique(myris$Species)) {
+#
+all.species <- levels(myris$Species)
+
+# storing results
+# my.results <- list(est = NA, std.errors = NA, pvals = NA, plots = NA) # list also possible, just maybe less convenient
+
+my.results <- data.frame(species = all.species, est = NA, std.err = NA, pval = NA)
+my.results # check this "empty" results table 
+my.plots <- list()
+for(this.species in all.species) {
+  print(paste("Now we're getting the results for", this.species))
+  myris.subset <- myris[myris$Species == this.species, ]
+  myris.lm <- lm(Sepal.Width ~ Sepal.Length, data = myris.subset) 
+  coefs <- summary(myris.lm)$coefficients
+  
+  # the values we want
+  est <- coefs["Sepal.Length", "Estimate"]
+  std.error <- coefs["Sepal.Length", "Std. Error"]
+  pval <- coefs["Sepal.Length", "Pr(>|t|)"]
+  plot <- ggplot(myris.subset, aes(Sepal.Length, Sepal.Width)) + geom_point() + geom_smooth(method = "lm") + labs(title = this.species)
+  
+  # stick the values in our results object
+  my.results[my.results$species == this.species, c("est", "std.err", "pval")] <- c(est, std.error, pval)
+  my.plots[[this.species]] <- plot
+}
+
+my.results
+my.plots[["setosa"]]
+my.plots[["virginica"]]
+my.plots[["versicolor"]]
+
+#this.species <- "setosa"
+#  print(ggplot(myris.subset, aes(Sepal.Length, Sepal.Width)) + geom_point() + geom_smooth(method = "lm") + labs(title = this.species))
+
+# faceting: sometimes a good alternative to looping (with plots)
+
+ggplot(myris, aes(Sepal.Length, Sepal.Width)) + geom_point() + geom_smooth(method = "lm") + facet_wrap(~ Species)
+
+library(grid)
+library(gridExtra)
+grid.arrange(my.plots[[1]], my.plots[[2]], my.plots[[3]], ncol = 1) # good for arranging multiple plots in one window/page
+
+```
+
+NOTE: sometimes "indices" work better than "values"
+
+```{r}
+all.species <- levels(myris$Species)
+
+my.results <- data.frame(species = all.species, est = NA, std.err = NA, pval = NA)
+my.plots <- list()
+
+for(this.row in 1:length(all.species)) {
+  print(paste("Now we're getting the results for", all.species[this.row]))
+  myris.subset <- myris[myris$Species == all.species[this.row], ]
+  myris.lm <- lm(Sepal.Width ~ Sepal.Length, data = myris.subset) 
+  coefs <- summary(myris.lm)$coefficients
+  
+  # the values we want
+  est <- coefs["Sepal.Length", "Estimate"]
+  std.error <- coefs["Sepal.Length", "Std. Error"]
+  pval <- coefs["Sepal.Length", "Pr(>|t|)"]
+  plot <- ggplot(myris.subset, aes(Sepal.Length, Sepal.Width)) + geom_point() + geom_smooth(method = "lm") + labs(title = all.species[this.row])
+  
+  # stick the values in our results object
+  my.results[this.row, c("est", "std.err", "pval")] <- c(est, std.error, pval)
+  my.plots[[this.row]] <- plot
+}
+
+my.results
+names(my.plots)
+str(my.plots)
+my.plots[[1]]
+my.plots[[2]]
+my.plots[[3]]
+```
+
+4. When things break: 
+  - find out where it broke (if an Error)
+    - last value of counter == where it broke
+  - run in through single loops
+    - manually set counter variable
+
+## Vectorized version
+  - same overall process
+    1. DO IT ONCE
+    2. Instead of finding counter variable, find arguments
+       - write down (comments) what you expect each argument to be
+
+```{r}
+
+get.results <- function(chunk, DV, IV) {
+  # expect chunk to be a data frame
+  # expect DV and IV to be strings, names of columns to go in the regression
+  my.formula <- as.formula(paste(DV, "~", IV)) # handy way to "build" a formula
+  myris.lm <- lm(my.formula, data = chunk) 
+  #my.iris.lm <- lm(get(DV))~data = chunk)
+  coefs <- summary(myris.lm)$coefficients
+  
+  # the values we want
+  est <- coefs[IV, "Estimate"]
+  std.error <- coefs[IV, "Std. Error"]
+  pval <- coefs[IV, "Pr(>|t|)"]
+  # plot <- ggplot(chunk, aes(get(IV), get(DV))) + geom_point() + geom_smooth(method = "lm") + labs(title = this.species)
+  
+  # stick the values in our results object
+  my.results <- data.frame(est = est, std.err = std.error, pval = pval)
+
+  return(my.results)
+}
+
+get.results(myris, DV = "Petal.Width", IV = "Petal.Length")
+
+library(dplyr)
+
+# with pipes
+all.results <- myris %>% group_by(Species) %>% do(get.results(chunk = ., DV = "Petal.Width", IV = "Petal.Length")) %>% as.data.frame()
+all.results
+
+# without pipes
+all.results2 <- as.data.frame(do(.data = group_by(myris, Species), get.results(.,  DV = "Petal.Width", IV = "Petal.Length")))
+all.results2
+
+
+all.results
+
+```
+
+# Debugging functions
+
+- by-hand debugging
+
+```{r}
+# "manually" set the value of each argument, step through the function as if it were just a regular script
+IV <- "Petal.Width"
+DV <- "Petal.Length"
+chunk <- myris
+```
+
+- with `debug()` and `browser()`
+
+```{r}
+test.function <- function(chunk, DV, IV) {
+  my.formula <- as.formula(paste(DV, "~", IV))
+  myris.lm <- lm(my.formula, data = chunk) 
+  coefs <- summary(myris.lm)$coefficients
+  
+  # the values we want
+  est <- coefs[IV, "Estimate"]
+  std.err <- coefs[IV, "Std. Error"]
+  pval <- coefs[IV, "Pr(>t|)"]
+  plot <- ggplot(chunk, aes(get(IV), get(DV))) + geom_point() + geom_smooth(method = "lm") + labs(title = this.species)
+  
+  # stick the values in our results object
+  my.results <- data.frame(est = est, std.err = std.err, pval = pval)
+
+  return(my.results)
+  
+}
+
+test.function(myris, "Sepal.Width", "Sepal.Length")
+
+debug(test.function)
+
+test.function(myris, "Sepal.Width", "Sepal.Length")
+
+# capital "Q" + Enter exits debugger (aka "browser")
+
+# can also insert browser()
+test.function2 <- function(chunk, DV, IV) {
+  my.formula <- as.formula(paste(DV, "~", IV))
+  myris.lm <- lm(my.formula, data = chunk) 
+  coefs <- summary(myris.lm)$coefficients
+  #if(this.species == "setosa") { # if you want to selectively browse
+    browser()
+  #}
+ 
+  # the values we want
+  est <- coefs[IV, "Estimate"]
+  std.err <- coefs[IV, "Std. Error"]
+  pval <- coefs[IV, "Pr(>t|)"]
+  plot <- ggplot(chunk, aes(get(IV), get(DV))) + geom_point() + geom_smooth(method = "lm") + labs(title = this.species)
+   # stick the values in our results object
+  my.results <- data.frame(est = est, std.err = std.err, pval = pval)
+  return(my.results)
+}
+
+test.function2(myris, "Sepal.Width", "Sepal.Length")
+
+```
+
+# More examples
+
+## EXAMPLE: SD-based cutoffs
+
+```{r}
+my.iris <- iris
+
+#if you want to break up your data among one dimension, you want to get data into "long" format so you can use dplyr
+
+my.iris$plantID <- 1:nrow(my.iris)
+
+mean.value <- mean(my.iris$Sepal.Length)
+sd.value <- sd(my.iris$Sepal.Length)
+min.value <- mean.value - sd.value *1
+max.value <- mean.value + sd.value*1
+
+#want to arrange data so that if data is below the min value, we make it the min value and do the same for values above max value
+
+## to do this use ifelse
+
+my.iris$Sepal.Length.Truncated <- ifelse(my.iris$Sepal.Length < min.value, yes = min.value, ifelse(my.iris$Sepal.Length > max.value, yes = max.value, no = my.iris$Sepal.Length))
+
+
+#check that values changed
+summary(my.iris)
+
+
+#creating function
+truncate.by.sd <- function(chunk, value.column, multiplier = 1) {
+  chunk <- as.data.frame(chunk)
+  mean.value <- mean(chunk[, value.column])
+  sd.value <- sd(chunk[, value.column])
+  min.value <- mean.value - sd.value * multiplier
+  max.value <- mean.value + sd.value* multiplier
+  chunk$Sepal.Length.Truncated <- ifelse(chunk[, value.column] < min.value, yes = min.value, ifelse(chunk[, value.column] > max.value, yes = max.value, no = chunk[, value.column]))
+  return(chunk)
+}
+
+my.iris2 <- truncate.by.sd(my.iris, "Sepal.Length")
+
+library(dplyr)
+my.iris3 <- group_by(my.iris, Species) %>% do(truncate.by.sd (., "Sepal.Length"))
+
+summary(my.iris3)
+
+library(tidyr)
+my.iris.long <- gather(my.iris, variable, value, Sepal.Length:Petal.Width)
+
+head(my.iris.long)
+
+my.iris4 <- group_by(my.iris.long, Species, variable) %>% do(truncate.by.sd(.,"value"))
+
+head(my.iris4)
+
+
+my.iris4.wide <- spread(my.iris4, variable, value)
+
+summary(my.iris4.wide)
+
+```
+
+## EXAMPLE: Error bars
+
+```{r}
+head(my.iris.long)
+
+#want to get cell means by species and variable
+
+std.err <- function(x) {
+  se <- sd(x)/sqrt(length(x))
+  se
+}
+
+cell.means <- group_by(my.iris.long, variable, Species) %>% summarize(mean.value = mean(value), se = std.err(value))
+
+cell.means 
+
+
+ggplot(cell.means, aes(variable, mean.value))+
+  geom_bar(stat="identity", position = "dodge", aes(fill = "Species")) +geom_errorbar(ymin = min.value - 1.96*se, ymax = mean.value+1.96*se, position = "dodge")
+
+
+```
+
+
+#When to use vectorizing functions: 
+
+Scott's rules of thumb: 
+  - If you are doing something to each row in your data or to each column ... you can use `apply()`
+  - If you want to do some function to each member of a vector or a list (one-dimensional), you can use `sapply` or `lapply()` if you want to get a list back
+  - EVERYWHERE else try to use the group_by() function in dplyr
+    - may require you to set up a table of conditions
+    - sometimes summarize()
+      - want to boil down a lot of numbers (or some other vector) to one
+    - sometimes mutate()
+      - based on transformation of another column
+      - with rowwise() instead of group_by(), you get the same effect as apply()
+    - sometimes do()
+      - anything more complicated, write a function and use do()
+      - you take a chunk of a data frame and return a data frame
+      - 
