@@ -7,9 +7,11 @@ output: html_document
 
 For my final project I will use the terrorism data set to answer the following questions: 
 
-1) Is there a difference in severity of attacks between years?
+1) Is there a difference in frequency of attacks between years?
+   - 1a)Is there a difference in severity of attacks between years?
 
-2) Is there a difference in severity of attacks based on month of year?
+2) Is there a difference in frequency of attacks based on month of year? 
+   - 2a)Is there a difference in severity of attacks based on month of year?
 
 3) Which region of the world has largest volume of terror attacks?
 
@@ -17,7 +19,7 @@ For my final project I will use the terrorism data set to answer the following q
 
 5) What types of attacks lead to the most injuries?
 
-For questions 1 and 2, I will run a correlation test to determine the relationships between severity in attacks based on months and on years.Then I will use bootstrapping by creating my own loops in order to compare the results from the cor.test and the results from bootstrapping for the 95% confidence intervals. 
+For questions 1 and 2, I will run a correlation test to determine the relationships between frequency in attacks based on months and on years.Then I will use bootstrapping by creating my own loops in order to compare the results from the cor.test and the results from bootstrapping for the 95% confidence intervals. 
 
 Then for  questions 3 - 5, I will use either multiple regressions,  ANOVAs, or BAYES Factors to answer the questions. I will provide plots to display my findings for each question. 
 
@@ -25,6 +27,7 @@ Then for  questions 3 - 5, I will use either multiple regressions,  ANOVAs, or B
 ```{r}
 library(dplyr)
 library(ggplot2)
+library(plyr)
 library(tidyr)
 library(tidyverse)
 library(reshape2)
@@ -35,6 +38,16 @@ library(RColorBrewer)
 
 terrorism <- read_excel("terrorism.xlsx")
 my.terrorism <- terrorism
+
+summary(is.na(my.terrorism))
+
+summary(my.terrorism)
+
+#Removing rows with mission data -- most missing data was in the columns containing information on number of fatalities (nkill) and number of wounded (nwound)
+my.terrorism <- na.omit(my.terrorism)
+
+summary(is.na(my.terrorism))
+
 
 my.terrorism$iyear <- as.factor(my.terrorism$iyear)
 my.terrorism$imonth <- as.numeric(my.terrorism$imonth)
@@ -51,18 +64,15 @@ my.terrorism$attack.ID <- 1:nrow(my.terrorism)
 my.terrorism$casualty <- my.terrorism$nkill + my.terrorism$nwound
 my.terrorism$casualty <- as.numeric(my.terrorism$casualty)
 
-
-?spread
-ID.wide <- spread(my.terrorism, iyear, attack.ID, convert = TRUE)
-
-attack.means <- summarize(group_by(my.terrorism, attacktype1b, iyear), mean = mean(casualty, na.rm = TRUE))
-attack.means
-
 ```
 
-#1: Is there a difference in severity of attacks between years?
+#1: Is there a difference in frequency of attacks between years?
+##  - 1a) Is there a difference in severity of attacks between years?
 
-The results  show a significant differerence in severity of attacks for the following years: 
+### 1 The results show that the most terror attacks occured in 2014 (16860), followed by 2015 (14825), 2016 (13488), and 2013 (11996).
+
+
+### 1a) The results  show a significant differerence in severity of attacks for the following years: 
 
 - 2013 & 2014: t = 2.6974, df = 24734, p-value = 0.006992
 
@@ -77,6 +87,17 @@ The results  show a significant differerence in severity of attacks for the foll
 
 ```{r}
 
+#Number of Attacks Annualy
+summary(my.terrorism$iyear)
+
+
+#Graph of the number of Terrorist Attacks Annually
+frequency.annual.attacks <- ggplot(my.terrorism, aes(iyear)) + geom_bar(stat = "count")+ylab("Number of Attacks")+xlab("Year") +scale_y_continuous(breaks = c(2000, 4000, 6000, 8000, 10000, 12000, 14000, 16000)) + ggtitle("Annual Number of Terrorist Attacks Worldwide")+ theme(plot.title = element_text(hjust = 0.5))
+
+frequency.annual.attacks
+
+
+#Comparing relationships between number of attacks and year
 attack.2013 <- droplevels(my.terrorism[my.terrorism$iyear == "2013",  ])
 
 attack.2014 <- droplevels(my.terrorism[my.terrorism$iyear == "2014",  ])
@@ -98,38 +119,156 @@ t.test(attack.2014$casualty, attack.2016$casualty)
 
 t.test(attack.2015$casualty, attack.2016$casualty)
 
-ggplot(my.terrorism, aes(iyear, casualty))+geom_boxplot() +scale_y_log10(breaks = c(0, 2,4,6,8,100,500, 1000,1500))+ylab("Casualty per Attack")+xlab("Year")+ggtitle("Casualties Per Terrorist Attack")+ theme(plot.title = element_text(hjust = 0.5))
+casualty.per.attack.annual <- ggplot(my.terrorism, aes(iyear, casualty))+geom_boxplot(aes(fill = iyear)) +scale_y_log10(breaks = c(0, 2,4,6,8,100,500, 1000,1500))+ylab("Casualty per Attack")+ scale_fill_brewer(palette = "Set1") +xlab("Year")+ggtitle("Casualties Per Terrorist Attack")+ theme(plot.title = element_text(hjust = 0.5), legend.position = "none")
+
+casualty.per.attack.annual
 ```
 
 
 #2 Is there a difference in severity of attacks based on month of year?
 
 ```{r}
+#Graph of the number of Terrorist Attacks By Month
+frequency.monthly.attacks <- ggplot(my.terrorism, aes(imonth)) + geom_bar(stat = "count")+ylab("Number of Attacks")+xlab("Year") + scale_x_continuous(name = "Month", breaks = 1:12, labels = month.name)+scale_y_continuous(breaks = c(1000, 2000, 3000, 4000, 5000)) +ggtitle("Monthly Number of Terrorist Attacks (2013 - 2016")+ theme(plot.title = element_text(hjust = 0.5))
 
+frequency.monthly.attacks
+
+
+#Comparing relationships between number of attacks and year
+jan.attack <- droplevels(my.terrorism[my.terrorism$imonth == "1",  ])
+
+feb.attack <- droplevels(my.terrorism[my.terrorism$imonth == "2",  ])
+
+t.test(jan.attack$casualty, feb.attack$casualty)
+
+t.test(my.terrorism$imonth, my.terrorism$imonth$casualty)
+
+
+
+
+#Graph of Monthly Casualties in Terror Attacks (2013 - 2016)
+casualty.per.attack.monthly <- ggplot(my.terrorism, aes(imonth, log(casualty)))+geom_bar(stat = "identity", aes(fill = iyear))+ scale_fill_brewer(palette = "Set1", name = "Year")+ scale_x_continuous(name = "Month", breaks = 1:12, labels = month.name)+xlab("Month")+ylab("Number of Casualties")+ggtitle("Monthly Casualties in Terror Attacks (2013 - 2016)")+ theme(plot.title = element_text(hjust = 0.5))
+
+casualty.per.attack.monthly
 ```
 
 
 #3 Which region of the world has largest volume of terror attacks?
 
+## The following list represtents the number of terror attacks by region from 2013 - 2016
+   1:   23509 - Middle East & North Africa 
+   2:   17805 - South Asia 
+   3:   7287 - Sub-Saharan Africa  
+   4:   4416 - Southeast Asia 
+   5:   1946 - Eastern Europe 
+   6:   1073 - Western Europe 
+   7:   769 - South America   
+   8:   201 - North America   
+   9:   92 - East Asia    
+   10:  41 - Central Asia
+   11:  34 - Australasia & Oceania    
+   12:  23 - Central America & Caribbean    
+
 ```{r}
+
+#Volume of Terror Attacks by Region
+
+my.terrorism$region_txt <- as.factor(my.terrorism$region_txt)
+summary(my.terrorism$region_txt)
+
+count(my.terrorism$region_txt)
+
+
+
+#Graph of the volume of Terrorist Attacks by Region 
+region.attack.volume <- ggplot(my.terrorism, aes(region_txt)) + geom_bar(stat = "count")+ylab("Number of Attacks")+xlab("Region") +scale_y_log10(breaks = c(1000, 5000,10000, 15000, 20000))+ ggtitle("Volume of Terrorist Attacks by Region (2013 - 2016)")+ theme(plot.title = element_text(hjust = 0.5)) 
+
+region.attack.volume
 
 ```
 
 #4 What types of attacks lead to the most fatalities?
 
+##Hostage Barricade incidents are the terrorist attack type that typically lead to the highest number of fatalities
+
+###Additionally, a Bayes Factor analysis shows that overall the type of attack is a moderate predictor of number of Fatalities (BF10 = 3.64)
+
 ```{r}
+#Assumption Checking
+
+#1 Linearity - categorical variables do have a linear relationship, but there are significant outliers -- Assumption Met
+ggplot(my.terrorism, aes(attacktype1_txt, nkill)) +geom_point()
+
+#2 Normality of Residuals - The data has an extreme positive skew. Will correct with a square root transformation. -- Assumption Met
+lm.fatality <- lm(nkill ~ attacktype1_txt, data = my.terrorism)
+
+ggplot(lm.fatality, aes(lm.fatality$residuals))+geom_histogram(binwidth = 5)
+ggplot(lm.fatality, aes(log(lm.fatality$residuals)))+geom_histogram(binwidth = 1)
+
+
+
+#3 Homogenaity of Residuals: - Unable to plot due to error 
+## -- keep getting error: Error: Aesthetics must be either length 1 or the same as the data (57196): x, y
+qplot(lm.fatality$residuals, geom = "histogram")
+summary(lm.fatality)
+
+#4 Continuous, Interval level data -- Assumption Met
+
+#5 Data Points are independent -- Assumption Met
+
+
+BF.fatality <- generalTestBF(formula=nkill~attacktype1_txt, as.data.frame(my.terrorism))
+BF.fatality
+
+ggplot(my.terrorism, aes(attacktype1_txt, log(nkill), fill = attacktype1b))+geom_boxplot()+
+  ylab("Number of Fatalities")+
+  xlab("Attack Type") + 
+  scale_fill_brewer(palette = "Paired", name = "Attack Type") +
+  ggtitle("Fatalities by Attack Type")+ 
+  theme(plot.title = element_text(hjust = 0.5))
 
 ```
 
 #5 What types of attacks lead to the most injuries?
 
+##Hostage Barricade incidents are the terrorist attack type that typically lead to the highest number of injuries.
+
+###Additionally, a Bayes Factor analysis shows that overall the type of attack is a moderate predictor of number of Injuries (BF10 = 9.20)
+
 ```{r}
 
-plot(my.terrorism$nkill ~ my.terrorism$attacktype1_txt)
+#Assumption Checking
 
-lm.injury <- lm(nkill ~ attacktype1_txt, data = my.terrorism)
+#1 Linearity - categorical variables do have a linear relationship, but there are significant outliers -- Assumption Met
+ggplot(my.terrorism, aes(attacktype1_txt, nwound)) +geom_point()
 
+#2 Normality of Residuals - The data has an extreme positive skew. Will correct with a square root transformation. -- Assumption Met
+lm.injury <- lm(nwound ~ attacktype1_txt, data = my.terrorism)
+
+ggplot(lm.injury, aes(lm.injury$residuals))+geom_histogram(binwidth = 5)
+ggplot(lm.injury, aes(log(lm.injury$residuals)))+geom_histogram(binwidth = 1)
+
+
+
+#3 Homogenaity of Residuals: - Unable to plot due to error 
+## -- keep getting error: Error: Aesthetics must be either length 1 or the same as the data (57196): x, y
+qplot(lm.injury$residuals, geom = "histogram")
 summary(lm.injury)
+
+#4 Continuous, Interval level data -- Assumption Met
+
+#5 Data Points are independent -- Assumption Met
+
+
+BF.injury <- generalTestBF(formula=nwound~attacktype1_txt, as.data.frame(my.terrorism))
+BF.injury
+
+ggplot(my.terrorism, aes(attacktype1_txt, log(nwound), fill = attacktype1b))+geom_boxplot()+
+  ylab("Number of Injuries")+
+  xlab("Attack Type") + 
+  scale_fill_brewer(palette = "Paired", name = "Attack Type") +
+  ggtitle("Injuries by Attack Type")+ 
+  theme(plot.title = element_text(hjust = 0.5))
 
 
 ```
