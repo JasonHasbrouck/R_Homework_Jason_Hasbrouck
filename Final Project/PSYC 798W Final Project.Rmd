@@ -4,7 +4,6 @@ author: "Jason Hasbrouck"
 date: "1/18/2018"
 output: html_document
 ---
-
 For my final project I will use the terrorism data set to answer the following questions: 
 
 1) Is there a difference in frequency of attacks between years?
@@ -23,7 +22,6 @@ For questions 1 and 2, I will run a correlation test to determine the relationsh
 
 Then for  questions 3 - 5, I will use either multiple regressions,  ANOVAs, or BAYES Factors to answer the questions. I will provide plots to display my findings for each question. 
 
-
 ```{r}
 library(dplyr)
 library(ggplot2)
@@ -32,11 +30,14 @@ library(tidyr)
 library(tidyverse)
 library(reshape2)
 library(psych)
+library(boot)
 library(BayesFactor)
 library(readxl)
 library(RColorBrewer)
 
-terrorism <- read_excel("terrorism.xlsx")
+set.seed(22)
+
+terrorism <- read_excel("~/Library/Mobile Documents/com~apple~CloudDocs/Desktop/R Homework/R_Homework_Jason_Hasbrouck/terrorism.xlsx")
 my.terrorism <- terrorism
 
 summary(is.na(my.terrorism))
@@ -71,7 +72,6 @@ my.terrorism$casualty <- as.numeric(my.terrorism$casualty)
 
 ### 1 The results show that the most terror attacks occured in 2014 (16860), followed by 2015 (14825), 2016 (13488), and 2013 (11996).
 
-
 ### 1a) The results  show a significant differerence in severity of attacks for the following years: 
 
 - 2013 & 2014: t = 2.6974, df = 24734, p-value = 0.006992
@@ -84,7 +84,6 @@ my.terrorism$casualty <- as.numeric(my.terrorism$casualty)
 
 - 2014 & 2016: t = -4.4859, df = 19821, p-value = 7.301e-06
  
-
 ```{r}
 
 #Number of Attacks Annualy
@@ -122,10 +121,52 @@ t.test(attack.2015$casualty, attack.2016$casualty)
 casualty.per.attack.annual <- ggplot(my.terrorism, aes(iyear, casualty))+geom_boxplot(aes(fill = iyear)) +scale_y_log10(breaks = c(0, 2,4,6,8,100,500, 1000,1500))+ylab("Casualty per Attack")+ scale_fill_brewer(palette = "Set1") +xlab("Year")+ggtitle("Casualties Per Terrorist Attack")+ theme(plot.title = element_text(hjust = 0.5), legend.position = "none")
 
 casualty.per.attack.annual
+
+#Set up Wide Data Frame:
+
+   
+
+#Setting Up Bootstrap: 
+
+annual <- function(formula, data, indices){
+  d <- data[indices,]
+  fit <- lm(formula, data = d)
+  return(summary(fit)$r.square)
+}
+
+monthly.cor.results <- boot(data=month.attack.wide, statistic=monthly.rsq, R=200, formula = ID ~ January+February+March+April+May+June+July+August+September+October+November+December)
+plot(monthly.cor.results)
+
+monthly.bootcorr <- boot(month.attack.wide, monthly.cor, R=500)
+summary(monthly.bootcorr)
+
+plot(monthly.bootcorr)
+
+monthly.boot.ci <- boot.ci(monthly.bootcorr, type="perc")
 ```
 
+#2 Is there a difference in frequency of attacks based on month of year? 
+  - The month with the most number of terror attacks between 2013 and 2016 was May. 
 
-#2 Is there a difference in severity of attacks based on month of year?
+May: 5426
+Jul: 5261
+Oct: 4880
+Jan: 4876
+Aug: 4821
+Apr: 4791
+Nov: 4697
+Mar: 4636
+Feb: 4511
+Jun: 4564
+Sep: 4376
+Dec: 4357
+
+
+  - 1a) Is there a difference in severity of attacks between years?
+      - A Spearman test for correlation shows that theree is no linear relationship between severity of terrorist attack and month `R^2` = .007 (t = 1.658, df = 51955, p-value = 0.09732; 95% Confidence Interval = 1.156868 to 1.444911).
+
+  - Bootstrapping Results: 
+
 
 ```{r}
 #Graph of the number of Terrorist Attacks By Month
@@ -136,13 +177,43 @@ frequency.monthly.attacks
 
 #Comparing relationships between number of attacks and year
 jan.attack <- droplevels(my.terrorism[my.terrorism$imonth == "1",  ])
+count(jan.attack$imonth)
 
 feb.attack <- droplevels(my.terrorism[my.terrorism$imonth == "2",  ])
+count(feb.attack$imonth)
 
-t.test(jan.attack$casualty, feb.attack$casualty)
+mar.attack <- droplevels(my.terrorism[my.terrorism$imonth == "3",  ])
+count(mar.attack$imonth)
 
-t.test(my.terrorism$imonth, my.terrorism$imonth$casualty)
+apr.attack <- droplevels(my.terrorism[my.terrorism$imonth == "4",  ])
+count(apr.attack$imonth)
 
+may.attack <- droplevels(my.terrorism[my.terrorism$imonth == "5",  ])
+count(may.attack$imonth)
+
+jun.attack <- droplevels(my.terrorism[my.terrorism$imonth == "6",  ])
+count(jun.attack$imonth)
+
+jul.attack <- droplevels(my.terrorism[my.terrorism$imonth == "7",  ])
+count(jul.attack$imonth)
+
+aug.attack <- droplevels(my.terrorism[my.terrorism$imonth == "8",  ])
+count(aug.attack$imonth)
+
+sep.attack <- droplevels(my.terrorism[my.terrorism$imonth == "9",  ])
+count(sep.attack$imonth)
+
+oct.attack <- droplevels(my.terrorism[my.terrorism$imonth == "10",  ])
+count(oct.attack$imonth)
+
+nov.attack <- droplevels(my.terrorism[my.terrorism$imonth == "11",  ])
+count(nov.attack$imonth)
+
+dec.attack <- droplevels(my.terrorism[my.terrorism$imonth == "12",  ])
+count(dec.attack$imonth)
+
+# cor.test comparing if there is a difference between month and number of casualties
+cor.test(my.terrorism$imonth, my.terrorism$casualty) 
 
 
 
@@ -150,8 +221,52 @@ t.test(my.terrorism$imonth, my.terrorism$imonth$casualty)
 casualty.per.attack.monthly <- ggplot(my.terrorism, aes(imonth, log(casualty)))+geom_bar(stat = "identity", aes(fill = iyear))+ scale_fill_brewer(palette = "Set1", name = "Year")+ scale_x_continuous(name = "Month", breaks = 1:12, labels = month.name)+xlab("Month")+ylab("Number of Casualties")+ggtitle("Monthly Casualties in Terror Attacks (2013 - 2016)")+ theme(plot.title = element_text(hjust = 0.5))
 
 casualty.per.attack.monthly
-```
 
+
+
+#Create Monthly Data in Wide Format
+month.attack<- data.frame(my.terrorism$imonth, my.terrorism$casualty)
+head(month.attack)
+
+colnames(month.attack) <- c("month", "casualty")
+head(month.attack)
+
+month.attack$ID <- 1:nrow(month.attack)
+str(month.attack)
+
+
+month.attack.wide <- spread(month.attack, month, casualty, fill = 0)
+
+colnames(month.attack.wide) <- c("ID", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December")
+
+str(month.attack.wide)
+
+
+#Run correlation for each month
+
+month.cor <- month.attack.wide[,2:13]
+round(cor(month.cor), 2)
+
+#Set Up  Bootstrap for Correlation CI:
+
+monthly.rsq <- function(formula, data, indices){
+  d <- data[indices,]
+  fit <- lm(formula, data = d)
+  return(summary(fit)$r.square)
+}
+
+monthly.cor.results <- boot(data=month.attack.wide, statistic=monthly.rsq, R=200, formula = ID ~ January+February+March+April+May+June+July+August+September+October+November+December)
+plot(monthly.cor.results)
+
+monthly.bootcorr <- boot(month.attack.wide, monthly.cor, R=500)
+summary(monthly.bootcorr)
+
+plot(monthly.bootcorr)
+
+monthly.boot.ci <- boot.ci(monthly.bootcorr, type="perc")
+
+
+```
 
 #3 Which region of the world has largest volume of terror attacks?
 
@@ -193,6 +308,19 @@ region.attack.volume
 
 ###Additionally, a Bayes Factor analysis shows that overall the type of attack is a moderate predictor of number of Fatalities (BF10 = 3.64)
 
+### A Bayesian Regression shows very strong support that the type of terror attacks that leads to the highest number of fatalities is Hostage taking via kidnapping (BF10 = 46.784)
+
+List of Bayes Factors by Attack Type: 
+Unarmed Assault     3.435
+Facility Attack     0.012
+Hostage Kidnapping  46.784
+Hostage Barricade   0.0249
+Hijacking           0.015
+Bombing Explosion   13.904
+Armed Assault       0.013
+Assassination       0.012
+Unknown             2.203
+
 ```{r}
 #Assumption Checking
 
@@ -217,23 +345,64 @@ summary(lm.fatality)
 #5 Data Points are independent -- Assumption Met
 
 
-BF.fatality <- generalTestBF(formula=nkill~attacktype1_txt, as.data.frame(my.terrorism))
-BF.fatality
 
+#Graph of Fatalities by Terror Attack Type
 ggplot(my.terrorism, aes(attacktype1_txt, log(nkill), fill = attacktype1b))+geom_boxplot()+
   ylab("Number of Fatalities")+
   xlab("Attack Type") + 
   scale_fill_brewer(palette = "Paired", name = "Attack Type") +
-  ggtitle("Fatalities by Attack Type")+ 
+  ggtitle("Fatalities by Terror Attack Type")+ 
   theme(plot.title = element_text(hjust = 0.5))
 
+
+
+#General Bayes Test of all attack types 
+BF.fatality <- generalTestBF(formula=nkill~attacktype1_txt, as.data.frame(my.terrorism))
+BF.fatality
+
 ```
+#Bayesian Analysis: Attack type by injury
+- Will be hidden from knitted file due to size output
+```{r eval = FALSE, echo = FALSE}
+#Setting Up Data for Bayes Test by Attack Type 
+attack.kill <- data.frame(my.terrorism$attacktype1b, my.terrorism$nkill)
+
+colnames(attack.kill) <- c("attacktype", "nkill")
+
+attack.kill$ID <- 1:nrow(attack.kill)
+
+head(attack.kill)
+
+attack.kill.wide <- spread(attack.kill, attacktype, nkill, fill = 0)
+head(attack.kill.wide)
+
+str(attack.kill.wide)
+
+#General Bayes Test of Each Attack Type by casualty
+BF.attack.kill<- generalTestBF(ID~assassination+armed.assault+bombing.explosion+hijacking+hostage.barricade+hostage.kidnapping 
++facility.attack+unarmed.assault+unknown,data=attack.kill.wide)
+BF.attack.kill
+```
+
 
 #5 What types of attacks lead to the most injuries?
 
 ##Hostage Barricade incidents are the terrorist attack type that typically lead to the highest number of injuries.
 
 ###Additionally, a Bayes Factor analysis shows that overall the type of attack is a moderate predictor of number of Injuries (BF10 = 9.20)
+
+### A Bayesian Regression shows very little evidence that individual attack type is a strong predictor of number of injuries associated with a terror attack.
+
+List of Bayes Factors by Attack Type: 
+Unarmed Assault     0.010
+Facility Attack     0.026
+Hostage Kidnapping  0.023
+Hostage Barricade   0.026
+Hijacking           0.010
+Bombing Explosion   0.010
+Armed Assault       0.043
+Assassination       0.215
+Unknown             2.203
 
 ```{r}
 
@@ -271,5 +440,24 @@ ggplot(my.terrorism, aes(attacktype1_txt, log(nwound), fill = attacktype1b))+geo
   theme(plot.title = element_text(hjust = 0.5))
 
 
-```
+#Setting Up Data for Bayes Test by Attack Type 
+attack.wound <- data.frame(my.terrorism$attacktype1b, my.terrorism$nwound)
 
+colnames(attack.wound) <- c("attacktype", "nwound")
+
+attack.wound$ID <- 1:nrow(attack.wound)
+
+head(attack.wound)
+
+attack.wound.wide <- spread(attack.wound, attacktype, nwound, fill = 0)
+head(attack.wound.wide)
+
+```
+#Bayesian Analysis: Attack type by injury
+- Will be hidden from knitted file due to size output
+```{r eval = FALSE, echo = FALSE}
+BF.attack.wound<- generalTestBF(formula=ID~assassination + armed.assault + bombing.explosion + hijacking+ hostage.barricade+hostage.kidnapping 
+ + facility.attack  + unarmed.assault, as.data.frame(attack.wound.wide))
+BF.attack.wound
+```
+     
